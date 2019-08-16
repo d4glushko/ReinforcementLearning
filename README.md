@@ -1,1 +1,1 @@
-# RLGeneralization
+# ReinforcementLearning
