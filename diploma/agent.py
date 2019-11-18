@@ -40,6 +40,9 @@ class Agent:
         s = Variable(torch.from_numpy(state).float().unsqueeze(0))
 
         action_probs = self.model.get_action_probs(s)
+
+        # TODO: Fix issue: 
+        # https://stackoverflow.com/questions/57627943/invalid-multinomial-distribution-encountering-probability-entry-0-at-pytorc
         sample = action_probs.multinomial(self.action_space)
         action_value, action_index = sample.max(dim=1)
         action = action_index.data[0].item()
