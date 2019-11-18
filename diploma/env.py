@@ -21,10 +21,8 @@ class EnvironmentWrapper:
 
     def reset(self):
         state = self.env.reset()
-        return np.reshape(state, [1, self.observation_space()])
+        return state
 
     def step(self, action):
-        state_next, reward, terminal, info = self.env.step(action)
-        reward = reward if not terminal else -reward
-        state_next = np.reshape(state_next, [1, self.observation_space()])
-        return state_next, reward, terminal, info
+        state_next, reward, done, info = self.env.step(action)
+        return state_next, reward, done, info

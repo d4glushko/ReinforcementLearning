@@ -5,13 +5,10 @@ import numpy as np
 from diploma.agent import Agent
 from diploma.env import EnvironmentWrapper, NoiseType
 
-STEPS_NUMBER = 20
-
 
 class NoiseLearning:
-    def __init__(self, agents_number: int, env_name: str, steps_number: int = STEPS_NUMBER):
+    def __init__(self, agents_number: int, env_name: str):
         self.agents_number: int = agents_number
-        self.steps_number: int = steps_number
         self.environments: typing.List[EnvironmentWrapper] = [
             EnvironmentWrapper(env_name, NoiseType.Random) for i in range(agents_number)
         ]
@@ -23,8 +20,7 @@ class NoiseLearning:
             ]
         ]
 
-    def train(self, training_episodes: int = 10000000):
-
+    def train(self, training_episodes: int = 1000000):
         for i in range(training_episodes):
             for j in range(self.agents_number):
                 agent = self.agents[j]
@@ -34,16 +30,15 @@ class NoiseLearning:
 
                 # TODO: code is bound to the CartPole env currently. Make it more env agnostic
                 score = 0
-                for step in range(self.steps_number):
+                while True:
                     score += 1
                     action = agent.act(state)
-                    state_next, reward, terminal, info = env.step(action)
-                    agent.remember(state, action, reward, state_next, terminal)
+                    
+                    state_next, reward, done, info = env.step(action)
+                    agent.remember(state, action, reward, state_next, done)
                     state = state_next
-                    if terminal:
+                    if done:
                         break
-
-                agent.reflect()
 
             if self.should_swap_agents():
                 self.swap_agents()
