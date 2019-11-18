@@ -2,8 +2,8 @@ import typing
 
 import numpy as np
 
-from diploma.agent import Agent
-from diploma.env import EnvironmentWrapper, NoiseType
+from agent import Agent
+from env import EnvironmentWrapper, NoiseType
 
 
 class NoiseLearning:
@@ -20,9 +20,11 @@ class NoiseLearning:
             ]
         ]
 
-    def train(self, training_episodes: int = 1000000):
+    def train(self, training_episodes: int = 1000):
         for i in range(training_episodes):
+            print(f"Episode {i}")
             for j in range(self.agents_number):
+                print(f"Agent {j} started")
                 agent = self.agents[j]
                 env = self.environments[j]
 
@@ -35,10 +37,11 @@ class NoiseLearning:
                     action = agent.act(state)
                     
                     state_next, reward, done, info = env.step(action)
-                    agent.remember(state, action, reward, state_next, done)
+                    agent.remember(state, action, reward, done)
                     state = state_next
                     if done:
                         break
+                print(f"Agent {j} finished. Score {score}")
 
             if self.should_swap_agents():
                 self.swap_agents()

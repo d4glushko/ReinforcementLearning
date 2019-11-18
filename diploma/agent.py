@@ -1,6 +1,5 @@
 import random
 import typing
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -28,6 +27,8 @@ class MemoryCell:
 
 class Agent:
     def __init__(self, observation_space: int, action_space: int):
+        self.observation_space: int = observation_space
+        self.action_space: int = action_space
         self.gamma: float = GAMMA
         self.n_steps: int = N_STEPS
         self.memory: typing.List[MemoryCell] = []
@@ -39,7 +40,9 @@ class Agent:
         s = Variable(torch.from_numpy(state).float().unsqueeze(0))
 
         action_probs = self.model.get_action_probs(s)
-        action = action_probs.multinomial().data[0][0]
+        sample = action_probs.multinomial(self.action_space)
+        action_value, action_index = sample.max(dim=1)
+        action = action_index.data[0].item()
         return action
 
     def remember(self, state, action, reward, done):
@@ -69,7 +72,7 @@ class Agent:
         
         self.optimizer.zero_grad()
         total_loss.backward()
-        np.utils.clip_grad_norm(self.model.parameters(), 0.5)
+        nn.utils.clip_grad_norm(self.model.parameters(), 0.5)
         self.optimizer.step()
 
 
@@ -104,6 +107,9 @@ class Agent:
 class ActorCritic(nn.Module):
     def __init__(self, observation_space: int, action_space: int):
         super(ActorCritic, self).__init__()
+        self.action_space: int = action_space
+        self.observation_space: int = observation_space
+
         self.linear1 = nn.Linear(observation_space, 64)
         self.linear2 = nn.Linear(64, 128)
         self.linear3 = nn.Linear(128, 64)
@@ -140,7 +146,7 @@ class ActorCritic(nn.Module):
 
     def __get_action_probs_part(self, x):
         x = self.actor(x)
-        x = F.softmax(x)
+        x = F.softmax(x, dim=1)
         return x
 
     def __get_state_value_part(self, x):

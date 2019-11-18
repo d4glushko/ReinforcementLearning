@@ -1,6 +1,6 @@
 import argparse
 
-from diploma.noise_learning import NoiseLearning
+from noise_learning import NoiseLearning
 
 
 def main(arguments):
