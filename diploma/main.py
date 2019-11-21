@@ -4,7 +4,7 @@ from noise_learning import NoiseLearning
 
 
 def main(arguments):
-    agents_number = 5
+    agents_number = 1
     env_name = 'CartPole-v1'
     noise_learning = NoiseLearning(agents_number, env_name)
     noise_learning.train()

@@ -11,7 +11,7 @@ from torch.autograd import Variable
 GAMMA = .95
 
 # LR of 3e-2 explodes the gradients, LR of 3e-4 trains slower
-LR = 3e-3
+LR = 3e-4
 
 # OpenAI baselines uses nstep of 5.
 N_STEPS = 20
@@ -25,6 +25,7 @@ class MemoryCell:
         self.done: bool = done
 
 
+# https://github.com/rgilman33/simple-A2C/blob/master/3_A2C-nstep-TUTORIAL.ipynb
 class Agent:
     def __init__(self, observation_space: int, action_space: int):
         self.observation_space: int = observation_space
@@ -48,7 +49,7 @@ class Agent:
         action = action_index.data[0].item()
         return action
 
-    def remember(self, state, action, reward, done):
+    def remember(self, state, action, reward, done, next_state):
         if len(self.memory) >= self.n_steps:
             self.reflect()
             self.memory.clear()
@@ -81,8 +82,6 @@ class Agent:
 
     def __calc_actual_state_values(self):
         memory_copy = self.memory.copy()
-        
-        # rewards.reverse()
 
         next_return: float = 0
         if not memory_copy[-1].done:
@@ -121,7 +120,10 @@ class ActorCritic(nn.Module):
         self.critic = nn.Linear(64, 1)
 
     def forward(self, x):
+        # print(f"Before lin1: {x}")
+        # print(f"Lin1 w: {self.linear1.weight}")
         x = self.linear1(x)
+        # print(f"Before rel1: {x}")
         x = F.relu(x)
         x = self.linear2(x)
         x = F.relu(x)

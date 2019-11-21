@@ -3,6 +3,7 @@ import typing
 import numpy as np
 
 from agent import Agent
+from dqn_agent import Dqn
 from env import EnvironmentWrapper, NoiseType
 
 
@@ -33,14 +34,21 @@ class NoiseLearning:
                 # TODO: code is bound to the CartPole env currently. Make it more env agnostic
                 score = 0
                 while True:
+                    env.render()
                     score += 1
                     action = agent.act(state)
                     
                     state_next, reward, done, info = env.step(action)
-                    agent.remember(state, action, reward, done)
+                    reward = reward if not done else -reward
+                    agent.remember(state, action, reward, done, state_next)
                     state = state_next
                     if done:
                         break
+
+                    experience_replay = getattr(agent, "experience_replay", None)
+                    if callable(experience_replay):
+                        agent.experience_replay()
+
                 print(f"Agent {j} finished. Score {score}")
 
             if self.should_swap_agents():

@@ -23,6 +23,9 @@ class EnvironmentWrapper:
         state = self.env.reset()
         return state
 
+    def render(self):
+        return self.env.render()
+
     def step(self, action):
         state_next, reward, done, info = self.env.step(action)
         return state_next, reward, done, info
