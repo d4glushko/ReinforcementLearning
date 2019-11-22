@@ -52,7 +52,7 @@ class ReplayMemory:
 
 class Network(nn.Module):
     def __init__(self, observation_space: int, action_space: int):
-        nn.Module.__init__(self)
+        super(Network, self).__init__()
         self.l1 = nn.Linear(observation_space, HIDDEN_LAYER)
         self.l2 = nn.Linear(HIDDEN_LAYER, action_space)
 
@@ -67,13 +67,9 @@ class TestAgent(BaseAgent):
         self.observation_space = observation_space
         self.action_space = action_space
         self.exploration_rate = EXPLORATION_MAX
-
-        self.action_space = action_space
         self.memory = ReplayMemory(MEMORY_SIZE)
 
-        self.model = Network(observation_space, action_space)
-        if use_cuda:
-            self.model.cuda()
+        self.model = Network(observation_space, action_space).to(device)
 
         self.optimizer = optim.Adam(self.model.parameters(), LR)
 
