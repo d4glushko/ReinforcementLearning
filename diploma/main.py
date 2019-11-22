@@ -6,7 +6,7 @@ from noise_learning.noise_learning import NoiseLearning, NoiseLearningAgents
 def main(arguments):
     agents_number = 1
     env_name = 'CartPole-v1'
-    agent = NoiseLearningAgents.DQN
+    agent = NoiseLearningAgents.TEST
 
     noise_learning = NoiseLearning(agents_number, env_name, agent)
     noise_learning.train()
