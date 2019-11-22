@@ -34,10 +34,11 @@ class DqnAgent(BaseAgent):
         self.model.compile(loss="mse", optimizer=Adam(lr=LEARNING_RATE))
 
     def __reformat_state(self, state):
+        if state is None:
+            return state
         return np.reshape(state, [1, self.observation_space])
 
     def remember(self, state, action, reward, done, next_state):
-        
         self.memory.append((self.__reformat_state(state), action, reward, self.__reformat_state(next_state), done))
 
     def act(self, state):
