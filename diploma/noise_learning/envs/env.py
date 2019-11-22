@@ -1,7 +1,6 @@
-from enum import Enum
-
 import gym
 import numpy as np
+from enum import Enum
 
 
 class NoiseType(Enum):

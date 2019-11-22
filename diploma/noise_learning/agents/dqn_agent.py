@@ -1,13 +1,11 @@
 import random
-import gym
 import numpy as np
-import sys
 from collections import deque
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.optimizers import Adam
-import matplotlib.pyplot as plt
-from tqdm import tqdm
+
+from .base_agent import BaseAgent
 
 GAMMA = 1
 LEARNING_RATE = 0.001
@@ -19,7 +17,7 @@ EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.01
 EXPLORATION_DECAY = 0.995
 
-class Dqn:
+class DqnAgent(BaseAgent):
 
     def __init__(self, observation_space, action_space):
         self.observation_space = observation_space

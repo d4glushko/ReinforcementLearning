@@ -1,12 +1,14 @@
 import argparse
 
-from noise_learning import NoiseLearning
+from noise_learning.noise_learning import NoiseLearning, NoiseLearningAgents
 
 
 def main(arguments):
     agents_number = 1
     env_name = 'CartPole-v1'
-    noise_learning = NoiseLearning(agents_number, env_name)
+    agent = NoiseLearningAgents.DQN
+
+    noise_learning = NoiseLearning(agents_number, env_name, agent)
     noise_learning.train()
 
 

@@ -7,11 +7,13 @@ import torch.optim as optim
 import torch.autograd as autograd
 from torch.autograd import Variable
 
+from .base_agent import BaseAgent
+
 # Discount factor. Model is not very sensitive to this value.
 GAMMA = .95
 
 # LR of 3e-2 explodes the gradients, LR of 3e-4 trains slower
-LR = 3e-4
+LR = 3e-3
 
 # OpenAI baselines uses nstep of 5.
 N_STEPS = 20
@@ -26,14 +28,14 @@ class MemoryCell:
 
 
 # https://github.com/rgilman33/simple-A2C/blob/master/3_A2C-nstep-TUTORIAL.ipynb
-class Agent:
+class A2CAgent(BaseAgent):
     def __init__(self, observation_space: int, action_space: int):
         self.observation_space: int = observation_space
         self.action_space: int = action_space
         self.gamma: float = GAMMA
         self.n_steps: int = N_STEPS
         self.memory: typing.List[MemoryCell] = []
-        self.model = ActorCritic(observation_space, action_space)
+        self.model = A2CCartPoleNN(observation_space, action_space)
         self.optimizer = optim.Adam(self.model.parameters(), lr=LR)
         
 
@@ -106,9 +108,9 @@ class Agent:
         return result
 
 
-class ActorCritic(nn.Module):
+class A2CCartPoleNN(nn.Module):
     def __init__(self, observation_space: int, action_space: int):
-        super(ActorCritic, self).__init__()
+        super(A2CCartPoleNN, self).__init__()
         self.action_space: int = action_space
         self.observation_space: int = observation_space
 
