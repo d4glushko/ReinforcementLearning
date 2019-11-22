@@ -28,7 +28,7 @@ class NoiseLearning:
             ]
         ]
 
-    def __choose_agent(self, noise_learning_agent: NoiseLearningAgents):
+    def __choose_agent(self, noise_learning_agent: NoiseLearningAgents) -> typing.Type[BaseAgent]:
         agents_mapping = {
             NoiseLearningAgents.DQN: DqnAgent,
             NoiseLearningAgents.A2C: A2CAgent
