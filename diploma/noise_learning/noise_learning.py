@@ -56,11 +56,12 @@ class NoiseLearning:
                     
                     state_next, reward, done, info = env.step(action)
                     reward = reward if not done else -reward
+                    if done:
+                        agent.remember(state, action, reward, done, None)
+                        break
+                    
                     agent.remember(state, action, reward, done, state_next)
                     state = state_next
-                    if done:
-                        break
-
                     experience_replay = getattr(agent, "experience_replay", None)
                     if callable(experience_replay):
                         agent.experience_replay()
