@@ -19,7 +19,7 @@ EXPLORATION_MIN = 0.01
 EXPLORATION_DECAY = 0.995
 GAMMA = 0.9  # Q-learning discount factor
 LR = 0.001  # NN optimizer learning rate
-HIDDEN_LAYER = 256  # NN hidden layer size
+HIDDEN_LAYER = 24  # NN hidden layer size
 BATCH_SIZE = 64  # Q-learning batch size
 MEMORY_SIZE = 10000
 
@@ -54,11 +54,13 @@ class Network(nn.Module):
     def __init__(self, observation_space: int, action_space: int):
         super(Network, self).__init__()
         self.l1 = nn.Linear(observation_space, HIDDEN_LAYER)
-        self.l2 = nn.Linear(HIDDEN_LAYER, action_space)
+        self.l2 = nn.Linear(HIDDEN_LAYER, HIDDEN_LAYER)
+        self.l3 = nn.Linear(HIDDEN_LAYER, action_space)
 
     def forward(self, x):
         x = F.relu(self.l1(x))
-        x = self.l2(x)
+        x = F.relu(self.l2(x))
+        x = self.l3(x)
         return x
 
 class TestAgent(BaseAgent):
@@ -71,7 +73,7 @@ class TestAgent(BaseAgent):
 
         self.model = Network(observation_space, action_space).to(device)
 
-        self.optimizer = optim.Adam(self.model.parameters(), LR)
+        self.optimizer = optim.RMSprop(self.model.parameters())
 
     def remember(self, state, action, reward, done, next_state):
         state = torch.tensor([state], device=device, dtype=torch.float)
@@ -131,6 +133,8 @@ class TestAgent(BaseAgent):
         # Optimize the model
         self.optimizer.zero_grad()
         loss.backward()
+        for param in self.model.parameters():
+            param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
         self.exploration_rate *= EXPLORATION_DECAY
