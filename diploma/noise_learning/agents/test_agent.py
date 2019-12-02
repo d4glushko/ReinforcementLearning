@@ -5,9 +5,8 @@ import math
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.autograd import Variable
 import torch.nn.functional as F
-import matplotlib.pyplot as plt
+from torch.autograd import Variable
 from collections import namedtuple
 
 from .base_agent import BaseAgent
@@ -17,11 +16,11 @@ from .base_agent import BaseAgent
 EXPLORATION_MAX = 1.0
 EXPLORATION_MIN = 0.01
 EXPLORATION_DECAY = 0.995
-GAMMA = 0.9  # Q-learning discount factor
+GAMMA = 1  # Q-learning discount factor
 LR = 0.001  # NN optimizer learning rate
 HIDDEN_LAYER = 24  # NN hidden layer size
-BATCH_SIZE = 64  # Q-learning batch size
-MEMORY_SIZE = 10000
+BATCH_SIZE = 32  # Q-learning batch size
+MEMORY_SIZE = 50000
 
 # if gpu is to be used
 # use_cuda = torch.cuda.is_available()
@@ -64,18 +63,17 @@ class Network(nn.Module):
         return x
 
 class TestAgent(BaseAgent):
-
-    def __init__(self, observation_space: int, action_space: int):
-        self.observation_space = observation_space
-        self.action_space = action_space
+    def __init__(self, observation_space: int, action_space: int, debug: bool = False):
+        super().__init__(observation_space, action_space, debug)
         self.exploration_rate = EXPLORATION_MAX
         self.memory = ReplayMemory(MEMORY_SIZE)
 
         self.model = Network(observation_space, action_space).to(device)
 
-        self.optimizer = optim.RMSprop(self.model.parameters())
+        self.optimizer = optim.Adam(self.model.parameters(), lr=LR)
 
     def remember(self, state, action, reward, done, next_state):
+        super().remember(state, action, reward, done, next_state)
         state = torch.tensor([state], device=device, dtype=torch.float)
         action = torch.tensor([[action]], device=device, dtype=torch.long)
         if next_state is not None:
@@ -84,6 +82,7 @@ class TestAgent(BaseAgent):
         self.memory.push(state, action, next_state, reward)
 
     def act(self, state):
+        super().act(state)
         if random.random() < self.exploration_rate:
             return random.randrange(self.action_space)
         with torch.no_grad():
@@ -92,9 +91,11 @@ class TestAgent(BaseAgent):
             # found, so we pick action with the larger expected reward.
             return self.model(torch.tensor([state], device=device, dtype=torch.float)).max(1)[1].item()
 
-    def experience_replay(self):
+    def reflect(self):
         if len(self.memory) < BATCH_SIZE:
             return
+
+        super().reflect()
         transitions = self.memory.sample(BATCH_SIZE)
 
         # Transpose the batch (see https://stackoverflow.com/a/19343/3343043 for
@@ -133,8 +134,6 @@ class TestAgent(BaseAgent):
         # Optimize the model
         self.optimizer.zero_grad()
         loss.backward()
-        for param in self.model.parameters():
-            param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
 
         self.exploration_rate *= EXPLORATION_DECAY

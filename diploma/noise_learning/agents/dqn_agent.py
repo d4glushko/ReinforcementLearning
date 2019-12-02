@@ -18,13 +18,10 @@ EXPLORATION_MIN = 0.01
 EXPLORATION_DECAY = 0.995
 
 class DqnAgent(BaseAgent):
-
-    def __init__(self, observation_space, action_space):
-        self.observation_space = observation_space
-        self.action_space = action_space
+    def __init__(self, observation_space: int, action_space: int, debug: bool = False):
+        super().__init__(observation_space, action_space, debug)
         self.exploration_rate = EXPLORATION_MAX
 
-        self.action_space = action_space
         self.memory = deque(maxlen=MEMORY_SIZE)
 
         self.model = Sequential()
@@ -39,17 +36,23 @@ class DqnAgent(BaseAgent):
         return np.reshape(state, [1, self.observation_space])
 
     def remember(self, state, action, reward, done, next_state):
-        self.memory.append((self.__reformat_state(state), action, reward, self.__reformat_state(next_state), done))
+        super().remember(state, action, reward, done, next_state)
+        state = self.__reformat_state(state)
+        next_state = self.__reformat_state(next_state)
+        self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
+        super().act(state)
         if np.random.rand() < self.exploration_rate:
             return random.randrange(self.action_space)
         q_values = self.model.predict(self.__reformat_state(state))
         return np.argmax(q_values[0])
 
-    def experience_replay(self):
+    def reflect(self):
         if len(self.memory) < BATCH_SIZE:
             return
+
+        super().reflect()
         batch = random.sample(self.memory, BATCH_SIZE)
         for state, action, reward, state_next, terminal in batch:
             q_update = reward

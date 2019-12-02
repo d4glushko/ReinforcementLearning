@@ -16,13 +16,13 @@ class NoiseLearningAgents(Enum):
     
 
 class NoiseLearning:
-    def __init__(self, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents):
+    def __init__(self, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool = False):
         self.agents_number: int = agents_number
         self.environments: typing.List[EnvironmentWrapper] = [
             EnvironmentWrapper(env_name, NoiseType.Random) for i in range(agents_number)
         ]
         self.agents: typing.List[BaseAgent] = [
-            self.__choose_agent(noise_learning_agent)(env.observation_space(), env.action_space())
+            self.__choose_agent(noise_learning_agent)(env.observation_space(), env.action_space(), debug)
             for env in [
                 self.environments[i]
                 for i in range(agents_number)
@@ -55,16 +55,17 @@ class NoiseLearning:
                     action = agent.act(state)
                     
                     state_next, reward, done, info = env.step(action)
-                    reward = reward if not done else -reward
                     if done:
-                        agent.remember(state, action, reward, done, None)
-                        break
+                        reward = -reward
+                        state_next = None
                     
                     agent.remember(state, action, reward, done, state_next)
+                    agent.reflect()
+
+                    if done:
+                        break
+
                     state = state_next
-                    experience_replay = getattr(agent, "experience_replay", None)
-                    if callable(experience_replay):
-                        agent.experience_replay()
 
                 print(f"Agent {j} finished. Score {score}")
 

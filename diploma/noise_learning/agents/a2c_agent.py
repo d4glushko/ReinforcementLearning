@@ -29,9 +29,8 @@ class MemoryCell:
 
 # https://github.com/rgilman33/simple-A2C/blob/master/3_A2C-nstep-TUTORIAL.ipynb
 class A2CAgent(BaseAgent):
-    def __init__(self, observation_space: int, action_space: int):
-        self.observation_space: int = observation_space
-        self.action_space: int = action_space
+    def __init__(self, observation_space: int, action_space: int, debug: bool = False):
+        super().__init__(observation_space, action_space, debug)
         self.gamma: float = GAMMA
         self.n_steps: int = N_STEPS
         self.memory: typing.List[MemoryCell] = []
@@ -40,24 +39,26 @@ class A2CAgent(BaseAgent):
         
 
     def act(self, state):
+        super().act(state)
         s = Variable(torch.from_numpy(state).float().unsqueeze(0))
 
         action_probs = self.model.get_action_probs(s)
 
-        # TODO: Fix issue: 
-        # https://stackoverflow.com/questions/57627943/invalid-multinomial-distribution-encountering-probability-entry-0-at-pytorc
         sample = action_probs.multinomial(self.action_space)
         action_value, action_index = sample.max(dim=1)
         action = action_index.data[0].item()
         return action
 
     def remember(self, state, action, reward, done, next_state):
-        if len(self.memory) >= self.n_steps:
-            self.reflect()
-            self.memory.clear()
+        super().remember(state, action, reward, done, next_state)
         self.memory.append(MemoryCell(state, action, reward, done))
 
+    
     def reflect(self):
+        if len(self.memory) < self.n_steps:
+            return
+
+        super().reflect()
         # Ground trutch labels
         state_values_true = self.__calc_actual_state_values()
 
@@ -80,6 +81,8 @@ class A2CAgent(BaseAgent):
         total_loss.backward()
         nn.utils.clip_grad_norm(self.model.parameters(), 0.5)
         self.optimizer.step()
+
+        self.memory.clear()
 
 
     def __calc_actual_state_values(self):
