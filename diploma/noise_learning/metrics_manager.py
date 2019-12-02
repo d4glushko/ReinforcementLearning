@@ -11,6 +11,6 @@ class MetricsManager:
 
     def add_score(self, score: float):
         self.scores.append(score)
-        if len(self.scores) % self.number_of_iterations == 0:
+        if len(self.scores) % self.number_of_iterations == 0 and len(self.scores) >= self.number_of_elements:
             avg = np.array(self.scores[-self.number_of_elements:]).mean()
             self.avgs.append(avg)
