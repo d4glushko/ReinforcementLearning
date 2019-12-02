@@ -9,7 +9,7 @@ from .agents.base_agent import BaseAgent
 from .agents.a2c_agent import A2CAgent
 from .agents.dqn_agent import DqnAgent
 from .agents.test_agent import TestAgent
-from .envs.env import EnvironmentWrapper, NoiseType
+from .envs.env import EnvironmentWrapper
 from .metrics_manager import MetricsManager
 
 
@@ -26,7 +26,7 @@ class NoiseLearning:
     ):
         self.agents_number: int = agents_number
         self.environments: typing.List[EnvironmentWrapper] = [
-            EnvironmentWrapper(env_name, NoiseType.Random) for i in range(agents_number)
+            EnvironmentWrapper(env_name, noise_std_dev=(i * 0.01)) for i in range(agents_number)
         ]
         self.agents: typing.List[BaseAgent] = [
             self.__choose_agent(noise_learning_agent)(env.observation_space(), env.action_space(), debug)

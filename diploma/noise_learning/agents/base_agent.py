@@ -31,4 +31,4 @@ class BaseAgent():
             self._debug_log(f"Reflect Started.")
 
     def _debug_log(self, message):
-        print(f"DEBUG. {self}. {message}")
+        print(f"DEBUG. {self.__class__.__name__}. {message}")
