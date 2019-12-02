@@ -1,5 +1,5 @@
 class BaseAgent():
-    def __init__(self, observation_space: int, action_space: int, debug: bool = False):
+    def __init__(self, observation_space: int, action_space: int, debug: bool):
         self.observation_space: int = observation_space
         self.action_space: int = action_space
         self._debug: bool = debug

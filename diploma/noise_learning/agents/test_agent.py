@@ -63,7 +63,7 @@ class Network(nn.Module):
         return x
 
 class TestAgent(BaseAgent):
-    def __init__(self, observation_space: int, action_space: int, debug: bool = False):
+    def __init__(self, observation_space: int, action_space: int, debug: bool):
         super().__init__(observation_space, action_space, debug)
         self.exploration_rate = EXPLORATION_MAX
         self.memory = ReplayMemory(MEMORY_SIZE)

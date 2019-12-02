@@ -1,5 +1,8 @@
 import typing
 import numpy as np
+import matplotlib
+matplotlib.use("TKAgg")
+import matplotlib.pyplot as plt
 from enum import Enum
 
 from .agents.base_agent import BaseAgent
@@ -7,6 +10,7 @@ from .agents.a2c_agent import A2CAgent
 from .agents.dqn_agent import DqnAgent
 from .agents.test_agent import TestAgent
 from .envs.env import EnvironmentWrapper, NoiseType
+from .metrics_manager import MetricsManager
 
 
 class NoiseLearningAgents(Enum):
@@ -16,7 +20,10 @@ class NoiseLearningAgents(Enum):
     
 
 class NoiseLearning:
-    def __init__(self, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool = False):
+    def __init__(
+        self, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, 
+        metrics_number_of_elements: int, metrics_number_of_iterations: int
+    ):
         self.agents_number: int = agents_number
         self.environments: typing.List[EnvironmentWrapper] = [
             EnvironmentWrapper(env_name, NoiseType.Random) for i in range(agents_number)
@@ -28,6 +35,9 @@ class NoiseLearning:
                 for i in range(agents_number)
             ]
         ]
+        self.metrics: typing.List[MetricsManager] = [
+            MetricsManager(metrics_number_of_elements, metrics_number_of_iterations) for i in range(agents_number)
+        ]
 
     def __choose_agent(self, noise_learning_agent: NoiseLearningAgents) -> typing.Type[BaseAgent]:
         agents_mapping = {
@@ -37,13 +47,14 @@ class NoiseLearning:
         }
         return agents_mapping[noise_learning_agent]
 
-    def train(self, training_episodes: int = 1000):
+    def train(self, training_episodes):
         for i in range(training_episodes):
             print(f"Episode {i}")
             for j in range(self.agents_number):
                 print(f"Agent {j} started")
                 agent = self.agents[j]
                 env = self.environments[j]
+                metrics = self.metrics[j]
 
                 state = env.reset()
 
@@ -66,11 +77,21 @@ class NoiseLearning:
                         break
 
                     state = state_next
-
+                metrics.add_score(score)
                 print(f"Agent {j} finished. Score {score}")
 
             if self.should_swap_agents():
                 self.swap_agents()
+
+    def show_metrics(self):
+        for i in range(self.agents_number):
+            metrics = self.metrics[i]
+            print(f"Agent {i} metrics:")
+            fig = plt.figure()
+            plt.plot(metrics.avgs)
+            fig.suptitle(f"Agent {i}")
+            plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
+            plt.show(block=False)
 
     def should_swap_agents(self):
         pass

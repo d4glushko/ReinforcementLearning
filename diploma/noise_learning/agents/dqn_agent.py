@@ -18,7 +18,7 @@ EXPLORATION_MIN = 0.01
 EXPLORATION_DECAY = 0.995
 
 class DqnAgent(BaseAgent):
-    def __init__(self, observation_space: int, action_space: int, debug: bool = False):
+    def __init__(self, observation_space: int, action_space: int, debug: bool):
         super().__init__(observation_space, action_space, debug)
         self.exploration_rate = EXPLORATION_MAX
 

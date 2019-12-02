@@ -29,7 +29,7 @@ class MemoryCell:
 
 # https://github.com/rgilman33/simple-A2C/blob/master/3_A2C-nstep-TUTORIAL.ipynb
 class A2CAgent(BaseAgent):
-    def __init__(self, observation_space: int, action_space: int, debug: bool = False):
+    def __init__(self, observation_space: int, action_space: int, debug: bool):
         super().__init__(observation_space, action_space, debug)
         self.gamma: float = GAMMA
         self.n_steps: int = N_STEPS
