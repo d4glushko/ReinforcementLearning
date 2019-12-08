@@ -79,7 +79,6 @@ class A2CAgent(BaseAgent):
         
         self.optimizer.zero_grad()
         total_loss.backward()
-        nn.utils.clip_grad_norm(self.model.parameters(), 0.5)
         self.optimizer.step()
 
         self.memory.clear()

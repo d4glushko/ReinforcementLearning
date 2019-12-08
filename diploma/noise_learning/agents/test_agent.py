@@ -55,6 +55,7 @@ class Network(nn.Module):
         self.l1 = nn.Linear(observation_space, HIDDEN_LAYER)
         self.l2 = nn.Linear(HIDDEN_LAYER, HIDDEN_LAYER)
         self.l3 = nn.Linear(HIDDEN_LAYER, action_space)
+
         # Manual initialization of weights and biases
         # with torch.no_grad():
         #     self.l1.weight = nn.Parameter(torch.tensor(l1w, device=device, dtype=torch.float))
@@ -137,8 +138,7 @@ class TestAgent(BaseAgent):
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
-        a = self.model(state_batch)
-        state_action_values = a.gather(1, action_batch)
+        state_action_values = self.model(state_batch).gather(1, action_batch)
 
         # Compute V(s_{t+1}) for all next states.
         # Expected values of actions for non_final_next_states are computed based
@@ -146,24 +146,18 @@ class TestAgent(BaseAgent):
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
         next_state_values = torch.zeros(BATCH_SIZE, device=device)
-        b = self.model(non_final_next_states)
-        b = b.detach()
-        next_state_values[non_final_mask] = b.max(1)[0]
+        next_state_values[non_final_mask] = self.model(non_final_next_states).detach().max(1)[0]
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * GAMMA) + reward_batch
 
-        # Compute Huber loss
+        # Compute MSE Loss
         loss = nn.MSELoss()
         err = loss(state_action_values, expected_state_action_values.unsqueeze(1))
-        loss = F.mse_loss(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         self.optimizer.zero_grad()
-        # loss.backward()
         err.backward()
         self.optimizer.step()
 
         self.exploration_rate *= EXPLORATION_DECAY
         self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
-
-
