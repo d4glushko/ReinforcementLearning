@@ -50,11 +50,12 @@ class ReplayMemory:
         return len(self.memory)
 
 class Network(nn.Module):
-    def __init__(self, observation_space: int, action_space: int, l1w, l2w, l3w, l1b, l2b, l3b):
+    def __init__(self, observation_space: int, action_space: int):
         super(Network, self).__init__()
         self.l1 = nn.Linear(observation_space, HIDDEN_LAYER)
         self.l2 = nn.Linear(HIDDEN_LAYER, HIDDEN_LAYER)
         self.l3 = nn.Linear(HIDDEN_LAYER, action_space)
+        # Manual initialization of weights and biases
         # with torch.no_grad():
         #     self.l1.weight = nn.Parameter(torch.tensor(l1w, device=device, dtype=torch.float))
         #     self.l2.weight = nn.Parameter(torch.tensor(l2w, device=device, dtype=torch.float))
@@ -70,45 +71,23 @@ class Network(nn.Module):
         return x
 
 class TestAgent(BaseAgent):
-    def __init__(self, observation_space: int, action_space: int, debug: bool, l1w, l2w, l3w, l1b, l2b, l3b):
+    def __init__(self, observation_space: int, action_space: int, debug: bool):
         super().__init__(observation_space, action_space, debug)
         self.exploration_rate = EXPLORATION_MAX
         self.memory = ReplayMemory(MEMORY_SIZE)
 
-        self.model = Network(observation_space, action_space, l1w, l2w, l3w, l1b, l2b, l3b).to(device)
+        self.model = Network(observation_space, action_space).to(device)
 
-        def printdata(self, input, output):
-            print(f"Inside {self.__class__.__name__} forward")
-            print(f"")
-            print(f"Input: {type(input)}")
-            print(f"Input[0]: {type(input[0])}")
-            print(f"Output: {type(output)}")
-            print(f"Output[0]: {type(output[0])}")
-            print(f"")
-            print(f"Input size: {input[0].size()}")
-            print(f"Input data: {input}")
-            print(f"Output size: {output.data.size()}")
-            print(f"Output data: {output.data}")
-            print(f"L1 weight: {self.l1.weight}")
-            print(f"L2 weight: {self.l2.weight}")
-            print(f"L3 weight: {self.l3.weight}")
+        # Add debug hooks
+        # def printdata(self, input, output):
+        #     print(f"Inside {self.__class__.__name__} forward")
+        #     print(f"Input data: {input}")
+        #     print(f"Output data: {output.data}")
 
-        def printgraddata(self, input, output):
-            print(f"Inside {self.__class__.__name__} backward")
-            print(f"")
-            print(f"Grad Input: {type(input)}")
-            print(f"Grad Input[0]: {type(input[0])}")
-            print(f"Grad Output: {type(output)}")
-            print(f"Grad Output[0]: {type(output[0])}")
-            print(f"")
-            print(f"Grad Input size: {input[0].size()}")
-            print(f"Grad Input data: {input[0]}")
-            print(f"Grad Output size: {output[0].size()}")
-            print(f"Grad Output data: {output[0]}")
-            print(f"L1 weight: {self.l1.weight}")
-            print(f"L2 weight: {self.l2.weight}")
-            print(f"L3 weight: {self.l3.weight}")
-
+        # def printgraddata(self, input, output):
+        #     print(f"Inside {self.__class__.__name__} backward")
+        #     print(f"Grad Input data: {input[0]}")
+        #     print(f"Grad Output data: {output[0]}")
         # self.model.register_forward_hook(printdata)
         # self.model.register_backward_hook(printgraddata)
 
