@@ -50,11 +50,18 @@ class ReplayMemory:
         return len(self.memory)
 
 class Network(nn.Module):
-    def __init__(self, observation_space: int, action_space: int):
+    def __init__(self, observation_space: int, action_space: int, l1w, l2w, l3w, l1b, l2b, l3b):
         super(Network, self).__init__()
         self.l1 = nn.Linear(observation_space, HIDDEN_LAYER)
         self.l2 = nn.Linear(HIDDEN_LAYER, HIDDEN_LAYER)
         self.l3 = nn.Linear(HIDDEN_LAYER, action_space)
+        # with torch.no_grad():
+        #     self.l1.weight = nn.Parameter(torch.tensor(l1w, device=device, dtype=torch.float))
+        #     self.l2.weight = nn.Parameter(torch.tensor(l2w, device=device, dtype=torch.float))
+        #     self.l3.weight = nn.Parameter(torch.tensor(l3w, device=device, dtype=torch.float))
+        #     self.l1.bias = nn.Parameter(torch.tensor(l1b, device=device, dtype=torch.float))
+        #     self.l2.bias = nn.Parameter(torch.tensor(l2b, device=device, dtype=torch.float))
+        #     self.l3.bias = nn.Parameter(torch.tensor(l3b, device=device, dtype=torch.float))
 
     def forward(self, x):
         x = F.relu(self.l1(x))
@@ -63,12 +70,47 @@ class Network(nn.Module):
         return x
 
 class TestAgent(BaseAgent):
-    def __init__(self, observation_space: int, action_space: int, debug: bool):
+    def __init__(self, observation_space: int, action_space: int, debug: bool, l1w, l2w, l3w, l1b, l2b, l3b):
         super().__init__(observation_space, action_space, debug)
         self.exploration_rate = EXPLORATION_MAX
         self.memory = ReplayMemory(MEMORY_SIZE)
 
-        self.model = Network(observation_space, action_space).to(device)
+        self.model = Network(observation_space, action_space, l1w, l2w, l3w, l1b, l2b, l3b).to(device)
+
+        def printdata(self, input, output):
+            print(f"Inside {self.__class__.__name__} forward")
+            print(f"")
+            print(f"Input: {type(input)}")
+            print(f"Input[0]: {type(input[0])}")
+            print(f"Output: {type(output)}")
+            print(f"Output[0]: {type(output[0])}")
+            print(f"")
+            print(f"Input size: {input[0].size()}")
+            print(f"Input data: {input}")
+            print(f"Output size: {output.data.size()}")
+            print(f"Output data: {output.data}")
+            print(f"L1 weight: {self.l1.weight}")
+            print(f"L2 weight: {self.l2.weight}")
+            print(f"L3 weight: {self.l3.weight}")
+
+        def printgraddata(self, input, output):
+            print(f"Inside {self.__class__.__name__} backward")
+            print(f"")
+            print(f"Grad Input: {type(input)}")
+            print(f"Grad Input[0]: {type(input[0])}")
+            print(f"Grad Output: {type(output)}")
+            print(f"Grad Output[0]: {type(output[0])}")
+            print(f"")
+            print(f"Grad Input size: {input[0].size()}")
+            print(f"Grad Input data: {input[0]}")
+            print(f"Grad Output size: {output[0].size()}")
+            print(f"Grad Output data: {output[0]}")
+            print(f"L1 weight: {self.l1.weight}")
+            print(f"L2 weight: {self.l2.weight}")
+            print(f"L3 weight: {self.l3.weight}")
+
+        # self.model.register_forward_hook(printdata)
+        # self.model.register_backward_hook(printgraddata)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=LR)
 
@@ -116,7 +158,8 @@ class TestAgent(BaseAgent):
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
         # columns of actions taken. These are the actions which would've been taken
         # for each batch state according to policy_net
-        state_action_values = self.model(state_batch).gather(1, action_batch)
+        a = self.model(state_batch)
+        state_action_values = a.gather(1, action_batch)
 
         # Compute V(s_{t+1}) for all next states.
         # Expected values of actions for non_final_next_states are computed based
@@ -124,17 +167,24 @@ class TestAgent(BaseAgent):
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
         next_state_values = torch.zeros(BATCH_SIZE, device=device)
-        next_state_values[non_final_mask] = self.model(non_final_next_states).detach().max(1)[0]
+        b = self.model(non_final_next_states)
+        b = b.detach()
+        next_state_values[non_final_mask] = b.max(1)[0]
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * GAMMA) + reward_batch
 
         # Compute Huber loss
-        loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+        loss = nn.MSELoss()
+        err = loss(state_action_values, expected_state_action_values.unsqueeze(1))
+        loss = F.mse_loss(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         self.optimizer.zero_grad()
-        loss.backward()
+        # loss.backward()
+        err.backward()
         self.optimizer.step()
 
         self.exploration_rate *= EXPLORATION_DECAY
         self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
+
+

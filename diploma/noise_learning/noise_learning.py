@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
 from enum import Enum
+import time
 
 from .agents.base_agent import BaseAgent
 from .agents.a2c_agent import A2CAgent
@@ -35,6 +36,14 @@ class NoiseLearning:
                 for i in range(agents_number)
             ]
         ]
+        l1w = self.agents[0].model.layers[0].get_weights()[0]
+        l1b = self.agents[0].model.layers[0].get_weights()[1]
+        l2w = self.agents[0].model.layers[1].get_weights()[0]
+        l2b = self.agents[0].model.layers[1].get_weights()[1]
+        l3w = self.agents[0].model.layers[2].get_weights()[0]
+        l3b = self.agents[0].model.layers[2].get_weights()[1]
+        self.test_agent = TestAgent(self.environments[0].observation_space(), self.environments[0].action_space(), debug, 
+        l1w.transpose(), l2w.transpose(), l3w.transpose(), l1b, l2b, l3b)
         self.metrics: typing.List[MetricsManager] = [
             MetricsManager(metrics_number_of_elements, metrics_number_of_iterations) for i in range(agents_number)
         ]
@@ -63,20 +72,24 @@ class NoiseLearning:
                 while True:
                     env.render()
                     score += 1
-                    action = agent.act(state)
+                    # action = agent.act(state)
+                    test_action = self.test_agent.act(state)
                     
-                    state_next, reward, done, info = env.step(action)
+                    state_next, reward, done, info = env.step(test_action)
                     if done:
                         reward = -reward
                         state_next = None
                     
-                    agent.remember(state, action, reward, done, state_next)
-                    agent.reflect()
+                    # agent.remember(state, action, reward, done, state_next)
+                    self.test_agent.remember(state, test_action, reward, done, state_next)
+                    # agent.reflect()
+                    self.test_agent.reflect()
 
                     if done:
                         break
 
                     state = state_next
+                    # input("Press <ENTER> to continue")
                 metrics.add_score(score)
                 print(f"Agent {j} finished. Score {score}")
 
