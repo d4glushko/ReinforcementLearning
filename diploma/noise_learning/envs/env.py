@@ -31,9 +31,9 @@ class EnvironmentWrapper:
     # This is 'scale noise'. It means that it only changes the value by some scale (in other words multiplies by some random number around 1). 
     # It doesn't shift the values by some number. It means that this noise will not change the positive number to negative and vice-versa.
     def __noised_state(self, state):
-        return state * self.__sample_noise()
+        return state * self.__sample_scale_noise()
 
-    def __sample_noise(self) -> float:
+    def __sample_scale_noise(self) -> float:
         mean = 1
         noise = mean
         if self.is_noise:
