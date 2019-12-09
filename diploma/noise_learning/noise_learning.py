@@ -51,7 +51,6 @@ class NoiseLearning:
         for i in range(training_episodes):
             print(f"Episode {i}")
             for j in range(self.agents_number):
-                print(f"Agent {j} started")
                 agent = self.agents[j]
                 env = self.environments[j]
                 metrics = self.metrics[j]
@@ -61,7 +60,7 @@ class NoiseLearning:
                 # TODO: code is bound to the CartPole env currently. Make it more env agnostic
                 score = 0
                 while True:
-                    env.render()
+                    # env.render()
                     score += 1
 
                     action = agent.act(state)
