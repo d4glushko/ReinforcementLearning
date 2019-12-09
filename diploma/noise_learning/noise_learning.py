@@ -63,9 +63,10 @@ class NoiseLearning:
                 while True:
                     env.render()
                     score += 1
+
                     action = agent.act(state)
-                    
                     state_next, reward, done, info = env.step(action)
+                    
                     if done:
                         reward = -reward
                         state_next = None
