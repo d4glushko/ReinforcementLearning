@@ -23,8 +23,7 @@ BATCH_SIZE = 32  # Q-learning batch size
 MEMORY_SIZE = 50000
 
 # if gpu is to be used
-# use_cuda = torch.cuda.is_available()
-use_cuda = False
+use_cuda = torch.cuda.is_available()
 device = torch.device("cuda" if use_cuda else "cpu")
 
 Transition = namedtuple('Transition',
