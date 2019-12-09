@@ -17,7 +17,7 @@ class EnvironmentWrapper:
 
     def reset(self):
         state = self.env.reset()
-        state = state * self.__sample_noise()
+        state = self.__noised_state(state)
         return state
 
     def render(self):
@@ -25,8 +25,13 @@ class EnvironmentWrapper:
 
     def step(self, action):
         state_next, reward, done, info = self.env.step(action)
-        state_next = state_next * self.__sample_noise()
+        state_next = self.__noised_state(state_next)
         return state_next, reward, done, info
+
+    # This is 'scale noise'. It means that it only changes the value by some scale (in other words multiplies by some random number around 1). 
+    # It doesn't shift the values by some number. It means that this noise will not change the positive number to negative and vice-versa.
+    def __noised_state(self, state):
+        return state * self.__sample_noise()
 
     def __sample_noise(self) -> float:
         mean = 1
