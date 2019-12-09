@@ -24,6 +24,7 @@ MEMORY_SIZE = 50000
 
 # if gpu is to be used
 use_cuda = torch.cuda.is_available()
+# use_cuda = False
 device = torch.device("cuda" if use_cuda else "cpu")
 
 Transition = namedtuple('Transition',
@@ -151,7 +152,9 @@ class TestAgent(BaseAgent):
 
         # Compute MSE Loss
         loss = nn.MSELoss()
+        loss2 = nn.SmoothL1Loss()
         err = loss(state_action_values, expected_state_action_values.unsqueeze(1))
+        err2 = loss2(state_action_values, expected_state_action_values.unsqueeze(1))
 
         # Optimize the model
         self.optimizer.zero_grad()

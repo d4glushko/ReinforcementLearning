@@ -22,11 +22,11 @@ class NoiseLearningAgents(Enum):
 class NoiseLearning:
     def __init__(
         self, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, 
-        metrics_number_of_elements: int, metrics_number_of_iterations: int
+        metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float
     ):
         self.agents_number: int = agents_number
         self.environments: typing.List[EnvironmentWrapper] = [
-            EnvironmentWrapper(env_name, noise_std_dev=(i * 0.01)) for i in range(agents_number)
+            EnvironmentWrapper(env_name, noise_std_dev=(i * noise_env_step)) for i in range(agents_number)
         ]
         self.agents: typing.List[BaseAgent] = [
             self.__choose_agent(noise_learning_agent)(env.observation_space(), env.action_space(), debug)
@@ -49,7 +49,7 @@ class NoiseLearning:
 
     def train(self, training_episodes):
         for i in range(training_episodes):
-            print(f"Episode {i}")
+            print(f"Episode {i}. {(i / training_episodes) * 100}% done")
             for j in range(self.agents_number):
                 agent = self.agents[j]
                 env = self.environments[j]
@@ -84,14 +84,19 @@ class NoiseLearning:
                 self.swap_agents()
 
     def show_metrics(self):
+        fig = plt.figure()
+        legend = []
         for i in range(self.agents_number):
             metrics = self.metrics[i]
-            print(f"Agent {i} metrics:")
-            fig = plt.figure()
-            plt.plot(metrics.avgs)
-            fig.suptitle(f"Agent {i}")
-            plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
-            plt.show(block=False)
+            noise = self.environments[i].noise_std_dev
+            plt.plot(metrics.iterations, metrics.avgs)
+            legend.append(f"Agent {i}, Current Noise = {noise:.2f}")
+            
+        fig.suptitle(f"Score")
+        plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
+        plt.xlabel(f"Env Iterations")
+        plt.legend(legend, loc='upper left')
+        plt.show(block=False)
 
     def should_swap_agents(self):
         pass

@@ -5,15 +5,18 @@ from noise_learning.noise_learning import NoiseLearning, NoiseLearningAgents
 
 
 def main(arguments):
-    agents_number = 5
+    agents_number = 10
     env_name = 'CartPole-v1'
     agent = NoiseLearningAgents.TEST
     debug = False
-    training_episodes = 1000
+    training_episodes = 10000
     metrics_number_of_elements = 100
     metrics_number_of_iterations = 50
+    noise_env_step = 0.1
 
-    noise_learning = NoiseLearning(agents_number, env_name, agent, debug, metrics_number_of_elements, metrics_number_of_iterations)
+    noise_learning = NoiseLearning(
+        agents_number, env_name, agent, debug, metrics_number_of_elements, metrics_number_of_iterations, noise_env_step
+    )
 
     start = time.time()
     noise_learning.train(training_episodes)
