@@ -49,7 +49,7 @@ class NoiseLearning:
 
     def train(self, training_episodes):
         for i in range(training_episodes):
-            print(f"Episode {i}. {(i / training_episodes) * 100}% done")
+            print(f"Episode {i}. {((i / training_episodes) * 100):.2f}% done")
             for j in range(self.agents_number):
                 agent = self.agents[j]
                 env = self.environments[j]
