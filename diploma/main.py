@@ -9,7 +9,7 @@ def main(arguments):
     env_name = 'CartPole-v1'
     agent = NoiseLearningAgents.TEST
     debug = False
-    training_episodes = 10000
+    training_episodes = 1000
     metrics_number_of_elements = 100
     metrics_number_of_iterations = 50
     noise_env_step = 0.1
