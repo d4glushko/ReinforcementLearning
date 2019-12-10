@@ -2,23 +2,55 @@ import typing
 import numpy as np
 
 
+class Metric:
+    def __init__(self, value: float, iteration: int):
+        self.value: float = value
+        self.iteration: int = iteration
+
+
 class MetricsManager:
     def __init__(self, number_of_elements: int, number_of_iterations: int):
         self.number_of_iterations: int = number_of_iterations
         self.number_of_elements: int = number_of_elements
-        self.iteration: int = 0
-        self.scores: typing.List[float] = []
-        self.avgs: typing.List[float] = [0]
-        self.iterations: typing.List[int] = [0]
+        self.scores: typing.List[Metric] = []
+        self.losses: typing.List[Metric] = []
 
-    def add_score(self, score: float):
-        self.scores.append(score)
-        self.iteration = self.iteration + 1
-        if self.iteration % self.number_of_iterations == 0 and self.iteration >= self.number_of_elements:
-            self.__cut_scores()
-            avg = np.array(self.scores).mean()
-            self.avgs.append(avg)
-            self.iterations.append(self.iteration)
+    def add_score(self, score: float, iteration: int):
+        self.scores.append(Metric(score, iteration))
+        
+    def add_loss(self, loss: typing.Optional[float], iteration: int):
+        if loss != None:
+            self.losses.append(Metric(loss, iteration))
 
-    def __cut_scores(self):
-        self.scores = self.scores[-self.number_of_elements:]
+    def get_mov_avg_scores(self) -> typing.List[Metric]:
+        return [Metric(0, 0), *self.__get_mov_avgs(self.scores)]
+
+    def get_mov_avg_losses(self) -> typing.List[Metric]:
+        iterations = set([loss.iteration for loss in self.losses])
+        reduced_losses = [
+            Metric(
+                np.array([
+                    value.value
+                    for value in self.losses
+                    if value.iteration == iteration
+                ]).mean(), iteration
+            )
+            for iteration in iterations
+        ]
+        return self.__get_mov_avgs(reduced_losses)
+
+    def __get_mov_avgs(self, metrics: typing.List[Metric]) -> typing.List[Metric]:
+        avgs: typing.List[Metric] = [
+            Metric(
+                np.array([
+                    value.value
+                    for value in metrics
+                    if value.iteration > metric.iteration - self.number_of_elements and 
+                        value.iteration <= metric.iteration
+                ]).mean(), metric.iteration
+            )
+            for metric in metrics 
+            if metric.iteration % self.number_of_iterations == 0 and 
+                metric.iteration >= self.number_of_elements
+        ]
+        return avgs

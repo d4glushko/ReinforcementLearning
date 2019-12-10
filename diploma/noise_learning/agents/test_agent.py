@@ -1,3 +1,4 @@
+import typing
 import gym
 from gym import wrappers
 import random
@@ -118,8 +119,18 @@ class TestAgent(BaseAgent):
             return
 
         super().reflect()
-        transitions = self.memory.sample(BATCH_SIZE)
 
+        loss = self.__get_loss(self.memory.sample(BATCH_SIZE))
+        # Optimize the model
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        self.exploration_rate *= EXPLORATION_DECAY
+        self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
+        self.last_loss = loss.item()
+
+    def __get_loss(self, transitions: typing.List[Transition]):
         # Transpose the batch (see https://stackoverflow.com/a/19343/3343043 for
         # detailed explanation). This converts batch-array of Transitions
         # to Transition of batch-arrays.
@@ -152,14 +163,4 @@ class TestAgent(BaseAgent):
 
         # Compute MSE Loss
         loss = nn.MSELoss()
-        loss2 = nn.SmoothL1Loss()
-        err = loss(state_action_values, expected_state_action_values.unsqueeze(1))
-        err2 = loss2(state_action_values, expected_state_action_values.unsqueeze(1))
-
-        # Optimize the model
-        self.optimizer.zero_grad()
-        err.backward()
-        self.optimizer.step()
-
-        self.exploration_rate *= EXPLORATION_DECAY
-        self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
+        return loss(state_action_values, expected_state_action_values.unsqueeze(1))

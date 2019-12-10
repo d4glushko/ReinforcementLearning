@@ -10,7 +10,7 @@ from .agents.a2c_agent import A2CAgent
 from .agents.dqn_agent import DqnAgent
 from .agents.test_agent import TestAgent
 from .envs.env import EnvironmentWrapper
-from .metrics_manager import MetricsManager
+from .metrics_manager import MetricsManager, Metric
 
 
 class NoiseLearningAgents(Enum):
@@ -48,7 +48,7 @@ class NoiseLearning:
         return agents_mapping[noise_learning_agent]
 
     def train(self, training_episodes):
-        for i in range(training_episodes):
+        for i in range(1, training_episodes + 1):
             print(f"Episode {i}. {((i / training_episodes) * 100):.2f}% done")
             for j in range(self.agents_number):
                 agent = self.agents[j]
@@ -72,31 +72,52 @@ class NoiseLearning:
                     
                     agent.remember(state, action, reward, done, state_next)
                     agent.reflect()
+                    metrics.add_loss(agent.last_loss, i)
 
                     if done:
                         break
 
                     state = state_next
-                metrics.add_score(score)
+                metrics.add_score(score, i)
                 print(f"Agent {j} finished. Score {score}")
 
             if self.should_swap_agents():
                 self.swap_agents()
 
     def show_metrics(self):
+        self.__plot_scores()
+        self.__plot_losses()
+        plt.show(block=False)
+
+    def __plot_scores(self):
         fig = plt.figure()
         legend = []
         for i in range(self.agents_number):
             metrics = self.metrics[i]
             noise = self.environments[i].noise_std_dev
-            plt.plot(metrics.iterations, metrics.avgs)
+            avgs: typing.List[Metric] = metrics.get_mov_avg_scores()
+            plt.plot([avg.iteration for avg in avgs], [avg.value for avg in avgs])
             legend.append(f"Agent {i}, Current Noise = {noise:.2f}")
             
         fig.suptitle(f"Score")
         plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
         plt.xlabel(f"Env Iterations")
         plt.legend(legend, loc='upper left')
-        plt.show(block=False)
+    
+    def __plot_losses(self):
+        fig = plt.figure()
+        legend = []
+        for i in range(self.agents_number):
+            metrics = self.metrics[i]
+            noise = self.environments[i].noise_std_dev
+            avgs: typing.List[Metric] = metrics.get_mov_avg_losses()
+            plt.plot([avg.iteration for avg in avgs], [avg.value for avg in avgs])
+            legend.append(f"Agent {i}, Current Noise = {noise:.2f}")
+            
+        fig.suptitle(f"Loss")
+        plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
+        plt.xlabel(f"Env Iterations")
+        plt.legend(legend, loc='upper left')
 
     def should_swap_agents(self):
         pass
