@@ -1,6 +1,7 @@
 import typing
 import numpy as np
 import matplotlib
+import torch
 matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
 from enum import Enum
@@ -20,16 +21,18 @@ class NoiseLearningAgents(Enum):
 class NoiseLearning:
     def __init__(
         self, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, 
-        metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float
+        metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, use_cuda: bool
     ):
         self.agents_number: int = agents_number
         self.environments: typing.List[EnvironmentWrapper] = [
             EnvironmentWrapper(env_name, noise_std_dev=(i * noise_env_step)) for i in range(agents_number)
         ]
         self.agents: typing.List[BaseAgent] = [
-            self.__choose_agent(noise_learning_agent)(env.observation_space(), env.action_space(), debug)
-            for env in [
-                self.environments[i]
+            self.__choose_agent(noise_learning_agent)(
+                env.observation_space(), env.action_space(), self.__select_device(i, use_cuda), debug
+            )
+            for env, i in [
+                (self.environments[i], i)
                 for i in range(agents_number)
             ]
         ]
@@ -52,34 +55,49 @@ class NoiseLearning:
                 env = self.environments[j]
                 metrics = self.metrics[j]
 
-                state = env.reset()
-
-                # TODO: code is bound to the CartPole env currently. Make it more env agnostic
-                score = 0
-                while True:
-                    # env.render()
-                    score += 1
-
-                    action = agent.act(state)
-                    state_next, reward, done, info = env.step(action)
-                    
-                    if done:
-                        reward = -reward
-                        state_next = None
-                    
-                    agent.remember(state, action, reward, done, state_next)
-                    agent.reflect()
-                    metrics.add_loss(agent.last_loss, i)
-
-                    if done:
-                        break
-
-                    state = state_next
-                metrics.add_score(score, i)
-                print(f"Agent {j} finished. Score {score}")
+                self.__train_agent_episode(agent, env, metrics, i, j)
 
             if self.should_swap_agents():
                 self.swap_agents()
+
+    def __select_device(self, agent_number, use_cuda):
+        cuda_available = torch.cuda.is_available()
+        device = None
+        if use_cuda and cuda_available:
+            cuda_count = torch.cuda.device_count()
+            device = torch.device(f"cuda:{agent_number % cuda_count}")
+        else:
+            device = torch.device("cpu")
+        return device
+
+    def __train_agent_episode(
+        self, agent: BaseAgent, env: EnvironmentWrapper, metrics: MetricsManager, iteration: int, agent_number: int
+    ):
+        state = env.reset()
+
+        # TODO: code is bound to the CartPole env currently. Make it more env agnostic
+        score = 0
+        while True:
+            # env.render()
+            score += 1
+
+            action = agent.act(state)
+            state_next, reward, done, info = env.step(action)
+            
+            if done:
+                reward = -reward
+                state_next = None
+            
+            agent.remember(state, action, reward, done, state_next)
+            agent.reflect()
+            metrics.add_loss(agent.last_loss, iteration)
+
+            if done:
+                break
+
+            state = state_next
+        metrics.add_score(score, iteration)
+        print(f"Agent {agent_number} finished. Score {score}")
 
     def show_metrics(self):
         self.__plot_scores()

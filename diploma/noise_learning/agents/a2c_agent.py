@@ -29,12 +29,12 @@ class MemoryCell:
 
 # https://github.com/rgilman33/simple-A2C/blob/master/3_A2C-nstep-TUTORIAL.ipynb
 class A2CAgent(BaseAgent):
-    def __init__(self, observation_space: int, action_space: int, debug: bool):
-        super().__init__(observation_space, action_space, debug)
+    def __init__(self, observation_space: int, action_space: int, device, debug: bool):
+        super().__init__(observation_space, action_space, device, debug)
         self.gamma: float = GAMMA
         self.n_steps: int = N_STEPS
         self.memory: typing.List[MemoryCell] = []
-        self.model = A2CCartPoleNN(observation_space, action_space)
+        self.model = A2CCartPoleNN(observation_space, action_space).to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=LR)
         
 
@@ -62,11 +62,11 @@ class A2CAgent(BaseAgent):
         # Ground trutch labels
         state_values_true = self.__calc_actual_state_values()
 
-        s = Variable(torch.FloatTensor([m.state for m in self.memory]))
+        s = Variable(torch.FloatTensor([m.state for m in self.memory], device=self.device))
         action_probs, state_values_est = self.model.evaluate_actions(s)
         action_log_probs = action_probs.log()
 
-        a = Variable(torch.LongTensor([m.action for m in self.memory]).view(-1,1))
+        a = Variable(torch.LongTensor([m.action for m in self.memory], device=self.device).view(-1,1))
         chosen_action_log_probs = action_log_probs.gather(1, a)
 
         # TD error
@@ -106,7 +106,7 @@ class A2CAgent(BaseAgent):
             next_return = this_return
 
         state_values.reverse()
-        result = Variable(torch.FloatTensor(state_values)).unsqueeze(1)
+        result = Variable(torch.FloatTensor(state_values, device=self.device)).unsqueeze(1)
 
         return result
 

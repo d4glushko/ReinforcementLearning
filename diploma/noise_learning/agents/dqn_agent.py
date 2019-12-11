@@ -24,11 +24,6 @@ BATCH_SIZE = 128  # Q-learning batch size
 
 MEMORY_SIZE = 300000
 
-# if gpu is to be used
-use_cuda = torch.cuda.is_available()
-# use_cuda = False
-device = torch.device("cuda" if use_cuda else "cpu")
-
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
@@ -60,12 +55,12 @@ class Network(nn.Module):
 
         # Manual initialization of weights and biases
         # with torch.no_grad():
-        #     self.l1.weight = nn.Parameter(torch.tensor(l1w, device=device, dtype=torch.float))
-        #     self.l2.weight = nn.Parameter(torch.tensor(l2w, device=device, dtype=torch.float))
-        #     self.l3.weight = nn.Parameter(torch.tensor(l3w, device=device, dtype=torch.float))
-        #     self.l1.bias = nn.Parameter(torch.tensor(l1b, device=device, dtype=torch.float))
-        #     self.l2.bias = nn.Parameter(torch.tensor(l2b, device=device, dtype=torch.float))
-        #     self.l3.bias = nn.Parameter(torch.tensor(l3b, device=device, dtype=torch.float))
+        #     self.l1.weight = nn.Parameter(torch.tensor(l1w, dtype=torch.float).to(self.device, non_blocking=True))
+        #     self.l2.weight = nn.Parameter(torch.tensor(l2w, dtype=torch.float).to(self.device, non_blocking=True))
+        #     self.l3.weight = nn.Parameter(torch.tensor(l3w, dtype=torch.float).to(self.device, non_blocking=True))
+        #     self.l1.bias = nn.Parameter(torch.tensor(l1b, dtype=torch.float).to(self.device, non_blocking=True))
+        #     self.l2.bias = nn.Parameter(torch.tensor(l2b, dtype=torch.float).to(self.device, non_blocking=True))
+        #     self.l3.bias = nn.Parameter(torch.tensor(l3b, dtype=torch.float).to(self.device, non_blocking=True))
 
     def forward(self, x):
         x = F.relu(self.l1(x))
@@ -74,12 +69,12 @@ class Network(nn.Module):
         return x
 
 class DqnAgent(BaseAgent):
-    def __init__(self, observation_space: int, action_space: int, debug: bool):
-        super().__init__(observation_space, action_space, debug)
+    def __init__(self, observation_space: int, action_space: int, device, debug: bool):
+        super().__init__(observation_space, action_space, device, debug)
         self.exploration_rate = EXPLORATION_MAX
         self.memory = ReplayMemory(MEMORY_SIZE)
 
-        self.model = Network(observation_space, action_space).to(device)
+        self.model = Network(observation_space, action_space).to(self.device, non_blocking=True)
 
         # Add debug hooks
         # def printdata(self, input, output):
@@ -98,11 +93,11 @@ class DqnAgent(BaseAgent):
 
     def remember(self, state, action, reward, done, next_state):
         super().remember(state, action, reward, done, next_state)
-        state = torch.tensor([state], device=device, dtype=torch.float)
-        action = torch.tensor([[action]], device=device, dtype=torch.long)
+        state = torch.tensor([state], dtype=torch.float).to(self.device, non_blocking=True)
+        action = torch.tensor([[action]], dtype=torch.long).to(self.device, non_blocking=True)
         if next_state is not None:
-            next_state = torch.tensor([next_state], device=device, dtype=torch.float)
-        reward = torch.tensor([reward], device=device, dtype=torch.float)
+            next_state = torch.tensor([next_state], dtype=torch.float).to(self.device, non_blocking=True)
+        reward = torch.tensor([reward], dtype=torch.float).to(self.device, non_blocking=True)
         self.memory.push(state, action, next_state, reward)
 
     def act(self, state):
@@ -113,7 +108,7 @@ class DqnAgent(BaseAgent):
             # t.max(1) will return largest column value of each row.
             # second column on max result is index of where max element was
             # found, so we pick action with the larger expected reward.
-            return self.model(torch.tensor([state], device=device, dtype=torch.float)).max(1)[1].item()
+            return self.model(torch.tensor([state], dtype=torch.float).to(self.device, non_blocking=True)).max(1)[1].item()
 
     def reflect(self):
         if len(self.memory) < BATCH_SIZE:
@@ -140,7 +135,7 @@ class DqnAgent(BaseAgent):
         # Compute a mask of non-final states and concatenate the batch elements
         # (a final state would've been the one after which simulation ended)
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                            batch.next_state)), device=device, dtype=torch.bool)
+                                            batch.next_state)), dtype=torch.bool).to(self.device, non_blocking=True)
         non_final_next_states = torch.cat([s for s in batch.next_state
                                                     if s is not None])
         state_batch = torch.cat(batch.state)
@@ -157,7 +152,7 @@ class DqnAgent(BaseAgent):
         # on the model; selecting their best reward with max(1)[0].
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
-        next_state_values = torch.zeros(BATCH_SIZE, device=device)
+        next_state_values = torch.zeros(BATCH_SIZE).to(self.device, non_blocking=True)
         next_state_values[non_final_mask] = self.model(non_final_next_states).detach().max(1)[0]
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * GAMMA) + reward_batch
