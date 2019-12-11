@@ -82,6 +82,7 @@ class A2CAgent(BaseAgent):
         self.optimizer.step()
 
         self.memory.clear()
+        self.last_loss = total_loss.item()
 
 
     def __calc_actual_state_values(self):

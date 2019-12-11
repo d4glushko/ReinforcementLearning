@@ -8,15 +8,13 @@ from enum import Enum
 from .agents.base_agent import BaseAgent
 from .agents.a2c_agent import A2CAgent
 from .agents.dqn_agent import DqnAgent
-from .agents.test_agent import TestAgent
 from .envs.env import EnvironmentWrapper
 from .metrics_manager import MetricsManager, Metric
 
 
 class NoiseLearningAgents(Enum):
-    TEST = 1
-    DQN = 2
-    A2C = 3
+    DQN = 1
+    A2C = 2
     
 
 class NoiseLearning:
@@ -41,7 +39,6 @@ class NoiseLearning:
 
     def __choose_agent(self, noise_learning_agent: NoiseLearningAgents) -> typing.Type[BaseAgent]:
         agents_mapping = {
-            NoiseLearningAgents.TEST: TestAgent,
             NoiseLearningAgents.DQN: DqnAgent,
             NoiseLearningAgents.A2C: A2CAgent
         }
