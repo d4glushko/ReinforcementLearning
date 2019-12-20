@@ -24,9 +24,6 @@ ENV_NAME='CartPole-v1'
 AGENT='DQN'
 NOISE_ENV_STEP=0.1
 
-METRICS_NUMBER_OF_ELEMENTS=100
-METRICS_NUMBER_OF_ITERATIONS=50
-
 DEBUG=false
 USE_CUDA=true
 TRAINING_EPISODES=1000
@@ -57,5 +54,5 @@ METRICS_NUMBER_OF_ITERATIONS=50
 
 Show results:
 ```
-./show_aggregated_results.sh 5
+./show_aggregated_results.sh
 ```
