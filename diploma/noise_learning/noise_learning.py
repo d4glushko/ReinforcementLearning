@@ -75,7 +75,14 @@ class NoiseLearning:
 
     def train(self):
         for i in range(1, self.training_episodes + 1):
-            print(f"Episode {i}. {((i / self.training_episodes) * 100):.2f}% done. {self.current_execution}/{self.total_executions} execution")
+            current_execution_percent = i / self.training_episodes * 100
+            total_percent = (current_execution_percent + 100 * self.current_execution) / self.total_executions
+            print(
+                f'''
+                    Episode {i}. Execution {current_execution_percent:.2f}% done. 
+                    {self.current_execution}/{self.total_executions} execution. Total {total_percent:.2f}% done.
+                '''
+            )
             for j in range(self.agents_number):
                 agent = self.agents[j]
                 env = self.environments[j]
