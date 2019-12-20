@@ -23,7 +23,7 @@ class NoiseLearning:
     def __init__(
         self, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, 
         metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, use_cuda: bool, 
-        ignore_training_setup: bool = False
+        current_execution: int = 1, total_executions: int = 1, ignore_training_setup: bool = False
     ):
         self.training_episodes: int = training_episodes
         self.agents_number: int = agents_number
@@ -34,6 +34,9 @@ class NoiseLearning:
         self.debug: bool = debug
         self.metrics_number_of_elements: int = metrics_number_of_elements
         self.metrics_number_of_iterations: int = metrics_number_of_iterations
+
+        self.current_execution: int = current_execution
+        self.total_executions: int = total_executions
 
         self.results_number: int = 1
 
@@ -72,7 +75,7 @@ class NoiseLearning:
 
     def train(self):
         for i in range(1, self.training_episodes + 1):
-            print(f"Episode {i}. {((i / self.training_episodes) * 100):.2f}% done")
+            print(f"Episode {i}. {((i / self.training_episodes) * 100):.2f}% done. {self.current_execution}/{self.total_executions} execution")
             for j in range(self.agents_number):
                 agent = self.agents[j]
                 env = self.environments[j]
