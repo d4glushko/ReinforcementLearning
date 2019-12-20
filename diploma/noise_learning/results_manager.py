@@ -12,7 +12,7 @@ class Settings:
         self.noise_learning_agent: str = noise_learning_agent
         self.noise_env_step: float = noise_env_step
 
-    def is_same_settings(self, settings: Settings):
+    def is_same_settings(self, settings: 'Settings'):
         return self.agents_number == settings.agents_number and \
                 self.env_name == settings.env_name and \
                 self.noise_learning_agent == settings.noise_learning_agent and \
@@ -50,7 +50,7 @@ class AgentResults:
 
 
 class ResultsManager:
-    results_path = ["diploma", "results"]
+    results_path = ["diploma", "temp_results"]
     settings_filename = "settings.txt"
     agent_filename = "agent{}.txt"
 

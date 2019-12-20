@@ -8,12 +8,14 @@ def main(arguments):
     agents_number = 10
     env_name = 'CartPole-v1'
     agent = NoiseLearningAgents.DQN
-    debug = False
-    training_episodes = 100
+    noise_env_step = 0.1
+
     metrics_number_of_elements = 10
     metrics_number_of_iterations = 5
-    noise_env_step = 0.1
+
+    debug = False
     use_cuda = True
+    training_episodes = 100
 
     noise_learning = NoiseLearning(
         training_episodes, agents_number, env_name, agent, debug, metrics_number_of_elements, 

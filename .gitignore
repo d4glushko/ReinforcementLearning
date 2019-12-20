@@ -103,5 +103,5 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# results
-diploma/results/
+# temp_results
+diploma/temp_results/

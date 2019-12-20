@@ -5,12 +5,13 @@ from noise_learning.noise_learning import NoiseLearning, NoiseLearningAgents
 
 
 def main(arguments):
-    agents_number = 10
+    agents_number = 2
     env_name = 'CartPole-v1'
     agent = NoiseLearningAgents.DQN
+    noise_env_step = 0.1
+
     metrics_number_of_elements = 4
     metrics_number_of_iterations = 2
-    noise_env_step = 0.1
 
     # TODO: Refactor to not set these unneeded settings for showing results
     debug = False
