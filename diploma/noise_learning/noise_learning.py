@@ -22,28 +22,45 @@ class NoiseLearningAgents(Enum):
 class NoiseLearning:
     def __init__(
         self, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, 
-        metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, use_cuda: bool
+        metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, use_cuda: bool, 
+        ignore_training_setup: bool = False
     ):
         self.training_episodes: int = training_episodes
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
         self.noise_env_step: float = noise_env_step
         self.env_name: str = env_name
+        self.use_cuda: bool = use_cuda
+        self.debug: bool = debug
+        self.metrics_number_of_elements: int = metrics_number_of_elements
+        self.metrics_number_of_iterations: int = metrics_number_of_iterations
 
+        self.results_number: int = 1
+
+        self.__setup_envs()
+        if not ignore_training_setup:
+            self.__setup_agents()
+        self.__setup_metrics()
+
+    def __setup_envs(self):
         self.environments: typing.List[EnvironmentWrapper] = [
-            EnvironmentWrapper(env_name, noise_std_dev=(i * noise_env_step)) for i in range(agents_number)
+            EnvironmentWrapper(self.env_name, noise_std_dev=(i * self.noise_env_step)) for i in range(self.agents_number)
         ]
+
+    def __setup_agents(self):
         self.agents: typing.List[BaseAgent] = [
-            self.__choose_agent(noise_learning_agent)(
-                env.observation_space(), env.action_space(), self.__select_device(i, use_cuda), debug
+            self.__choose_agent(self.noise_learning_agent)(
+                env.observation_space(), env.action_space(), self.__select_device(i, self.use_cuda), self.debug
             )
             for env, i in [
                 (self.environments[i], i)
-                for i in range(agents_number)
+                for i in range(self.agents_number)
             ]
         ]
+
+    def __setup_metrics(self):
         self.metrics: typing.List[MetricsManager] = [
-            MetricsManager(metrics_number_of_elements, metrics_number_of_iterations) for i in range(agents_number)
+            MetricsManager(self.metrics_number_of_elements, self.metrics_number_of_iterations) for i in range(self.agents_number)
         ]
 
     def __choose_agent(self, noise_learning_agent: NoiseLearningAgents) -> typing.Type[BaseAgent]:
@@ -113,6 +130,8 @@ class NoiseLearning:
                 agent_result = agent_results[i][j]
                 self.metrics[j].losses.extend(agent_result.losses)
                 self.metrics[j].scores.extend(agent_result.scores)
+
+        self.results_number = len(agent_results)
                 
     def show_metrics(self):
         self.__plot_scores()
@@ -142,7 +161,7 @@ class NoiseLearning:
             plt.plot([avg.iteration for avg in avgs], [avg.value for avg in avgs])
             legend.append(f"Agent {i}, Current Noise = {noise:.2f}")
             
-        fig.suptitle(f"Score")
+        fig.suptitle(f"Averaged Score for {self.results_number} run(s)")
         plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
         plt.xlabel(f"Env Iterations")
         plt.legend(legend, loc='upper left')
@@ -157,7 +176,7 @@ class NoiseLearning:
             plt.plot([avg.iteration for avg in avgs], [avg.value for avg in avgs])
             legend.append(f"Agent {i}, Current Noise = {noise:.2f}")
             
-        fig.suptitle(f"Loss")
+        fig.suptitle(f"Averaged Loss for {self.results_number} run(s)")
         plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
         plt.xlabel(f"Env Iterations")
         plt.legend(legend, loc='upper left')

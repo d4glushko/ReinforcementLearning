@@ -20,7 +20,7 @@ def main(arguments):
 
     noise_learning = NoiseLearning(
         training_episodes, agents_number, env_name, agent, debug, metrics_number_of_elements, 
-        metrics_number_of_iterations, noise_env_step, use_cuda
+        metrics_number_of_iterations, noise_env_step, use_cuda, ignore_training_setup=True
     )
 
     noise_learning.set_metrics()
