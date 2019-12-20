@@ -5,17 +5,19 @@ from noise_learning.noise_learning import NoiseLearning, NoiseLearningAgents
 
 
 def main(arguments):
-    agents_number = 10
+    agents_number = 2
     env_name = 'CartPole-v1'
     agent = NoiseLearningAgents.DQN
     noise_env_step = 0.1
 
-    metrics_number_of_elements = 10
-    metrics_number_of_iterations = 5
+    metrics_number_of_elements = 4
+    metrics_number_of_iterations = 2
 
     debug = False
     use_cuda = True
-    training_episodes = 100
+    training_episodes = 10
+
+    show_current_result = False
 
     noise_learning = NoiseLearning(
         training_episodes, agents_number, env_name, agent, debug, metrics_number_of_elements, 
@@ -25,10 +27,13 @@ def main(arguments):
     start = time.time()
     noise_learning.train()
     end = time.time()
-    noise_learning.show_metrics()
-    noise_learning.save_results()
     print(f"Execution time: {(end - start) / 60} minutes")
-    input("Press <ENTER> to continue")
+
+    noise_learning.save_results()
+
+    if show_current_result:
+        noise_learning.show_metrics()
+        input("Press <ENTER> to continue")
 
 
 if __name__ == '__main__':
