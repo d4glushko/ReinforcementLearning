@@ -11,6 +11,7 @@ from .agents.a2c_agent import A2CAgent
 from .agents.dqn_agent import DqnAgent
 from .envs.env import EnvironmentWrapper
 from .metrics_manager import MetricsManager, Metric
+from .results_manager import ResultsManager, Settings, AgentResults
 
 
 class NoiseLearningAgents(Enum):
@@ -20,10 +21,15 @@ class NoiseLearningAgents(Enum):
 
 class NoiseLearning:
     def __init__(
-        self, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, 
+        self, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, 
         metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, use_cuda: bool
     ):
+        self.training_episodes: int = training_episodes
         self.agents_number: int = agents_number
+        self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
+        self.noise_env_step: float = noise_env_step
+        self.env_name: str = env_name
+
         self.environments: typing.List[EnvironmentWrapper] = [
             EnvironmentWrapper(env_name, noise_std_dev=(i * noise_env_step)) for i in range(agents_number)
         ]
@@ -47,9 +53,9 @@ class NoiseLearning:
         }
         return agents_mapping[noise_learning_agent]
 
-    def train(self, training_episodes):
-        for i in range(1, training_episodes + 1):
-            print(f"Episode {i}. {((i / training_episodes) * 100):.2f}% done")
+    def train(self):
+        for i in range(1, self.training_episodes + 1):
+            print(f"Episode {i}. {((i / self.training_episodes) * 100):.2f}% done")
             for j in range(self.agents_number):
                 agent = self.agents[j]
                 env = self.environments[j]
@@ -99,10 +105,32 @@ class NoiseLearning:
         metrics.add_score(score, iteration)
         print(f"Agent {agent_number} finished. Score {score}")
 
+    def set_metrics(self):
+        settings = self.__get_result_settings()
+        agent_results = ResultsManager().get_results(settings)
+        for i in range(len(agent_results)):
+            for j in range(self.agents_number):
+                agent_result = agent_results[i][j]
+                self.metrics[j].losses.extend(agent_result.losses)
+                self.metrics[j].scores.extend(agent_result.scores)
+                
     def show_metrics(self):
         self.__plot_scores()
         self.__plot_losses()
         plt.show(block=False)
+
+    def save_results(self):
+        settings = self.__get_result_settings()
+
+        agent_results = [
+            AgentResults(metrics.scores, metrics.losses) for metrics in self.metrics
+        ]
+        ResultsManager().save_results(settings, agent_results)
+
+    def __get_result_settings(self) -> Settings:
+        return Settings(
+            self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step
+        )
 
     def __plot_scores(self):
         fig = plt.figure()

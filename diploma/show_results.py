@@ -8,24 +8,23 @@ def main(arguments):
     agents_number = 10
     env_name = 'CartPole-v1'
     agent = NoiseLearningAgents.DQN
-    debug = False
-    training_episodes = 100
-    metrics_number_of_elements = 10
-    metrics_number_of_iterations = 5
+    metrics_number_of_elements = 4
+    metrics_number_of_iterations = 2
     noise_env_step = 0.1
+
+    # TODO: Refactor to not set these unneeded settings for showing results
+    debug = False
     use_cuda = True
+    training_episodes = 10
 
     noise_learning = NoiseLearning(
         training_episodes, agents_number, env_name, agent, debug, metrics_number_of_elements, 
         metrics_number_of_iterations, noise_env_step, use_cuda
     )
 
-    start = time.time()
-    noise_learning.train()
-    end = time.time()
+    noise_learning.set_metrics()
     noise_learning.show_metrics()
-    noise_learning.save_results()
-    print(f"Execution time: {(end - start) / 60} minutes")
+
     input("Press <ENTER> to continue")
 
 

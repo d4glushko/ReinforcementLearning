@@ -7,6 +7,15 @@ class Metric:
         self.value: float = value
         self.iteration: int = iteration
 
+    def to_dict(self) -> dict:
+        return vars(self)
+
+    @staticmethod
+    def from_dict(metric: dict) -> 'Metric':
+        return Metric(
+            metric.get("value"), metric.get("iteration")
+        )
+
 
 class MetricsManager:
     def __init__(self, number_of_elements: int, number_of_iterations: int):
@@ -23,21 +32,24 @@ class MetricsManager:
             self.losses.append(Metric(loss, iteration))
 
     def get_mov_avg_scores(self) -> typing.List[Metric]:
-        return [Metric(0, 0), *self.__get_mov_avgs(self.scores)]
+        return [Metric(0, 0), *self.__get_mov_avgs(self.__reduce_metric(self.scores))]
 
     def get_mov_avg_losses(self) -> typing.List[Metric]:
-        iterations = set([loss.iteration for loss in self.losses])
-        reduced_losses = [
+        return self.__get_mov_avgs(self.__reduce_metric(self.losses))
+
+    def __reduce_metric(self, metrics: typing.List[Metric]) -> typing.List[Metric]:
+        iterations = set([metric.iteration for metric in metrics])
+        reduced_metric = [
             Metric(
                 np.array([
                     value.value
-                    for value in self.losses
+                    for value in metrics
                     if value.iteration == iteration
                 ]).mean(), iteration
             )
             for iteration in iterations
         ]
-        return self.__get_mov_avgs(reduced_losses)
+        return reduced_metric
 
     def __get_mov_avgs(self, metrics: typing.List[Metric]) -> typing.List[Metric]:
         avgs: typing.List[Metric] = [
