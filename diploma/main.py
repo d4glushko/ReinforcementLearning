@@ -1,7 +1,7 @@
 import argparse
 import time
 
-from .utils import str2bool
+from utils import str2bool
 from noise_learning.noise_learning import NoiseLearning, NoiseLearningAgents
 
 
