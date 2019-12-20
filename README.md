@@ -16,8 +16,46 @@ For the first time only:
 chmod +x train_multiple_runs.sh
 ```
 
-Run multiple train executions:
+(Optional)
+Change arguments in `train_multiple_runs.sh` file. Default arguments:
 ```
-./train_multiple_runs.sh
+AGENTS_NUMBER=10
+ENV_NAME='CartPole-v1'
+AGENT='DQN'
+NOISE_ENV_STEP=0.1
+
+METRICS_NUMBER_OF_ELEMENTS=100
+METRICS_NUMBER_OF_ITERATIONS=50
+
+DEBUG=false
+USE_CUDA=true
+TRAINING_EPISODES=1000
 ```
 
+Run multiple train executions (pass parameter for train executions count. Default 10 will be used if no parameter passed):
+```
+./train_multiple_runs.sh 5
+```
+
+## Show Results
+For the first time only:
+```
+chmod +x show_aggregated_results.sh
+```
+
+(Optional)
+Change arguments in `show_aggregated_results.sh` file to determine the executions set that will be used to show the results. Default arguments:
+```
+AGENTS_NUMBER=10
+ENV_NAME='CartPole-v1'
+AGENT='DQN'
+NOISE_ENV_STEP=0.1
+
+METRICS_NUMBER_OF_ELEMENTS=100
+METRICS_NUMBER_OF_ITERATIONS=50
+```
+
+Show results:
+```
+./show_aggregated_results.sh 5
+```
