@@ -150,7 +150,7 @@ class NoiseLearning:
         settings = self.__get_result_settings()
 
         agent_results = [
-            AgentResults(metrics.scores, metrics.losses) for metrics in self.metrics
+            AgentResults(metrics.reduce_metric(metrics.scores), metrics.reduce_metric(metrics.losses)) for metrics in self.metrics
         ]
         ResultsManager().save_results(settings, agent_results)
 

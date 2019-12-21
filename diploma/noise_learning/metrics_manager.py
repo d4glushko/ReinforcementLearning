@@ -32,12 +32,12 @@ class MetricsManager:
             self.losses.append(Metric(loss, iteration))
 
     def get_mov_avg_scores(self) -> typing.List[Metric]:
-        return [Metric(0, 0), *self.__get_mov_avgs(self.__reduce_metric(self.scores))]
+        return [Metric(0, 0), *self.__get_mov_avgs(self.reduce_metric(self.scores))]
 
     def get_mov_avg_losses(self) -> typing.List[Metric]:
-        return self.__get_mov_avgs(self.__reduce_metric(self.losses))
+        return self.__get_mov_avgs(self.reduce_metric(self.losses))
 
-    def __reduce_metric(self, metrics: typing.List[Metric]) -> typing.List[Metric]:
+    def reduce_metric(self, metrics: typing.List[Metric]) -> typing.List[Metric]:
         iterations = set([metric.iteration for metric in metrics])
         reduced_metric = [
             Metric(
