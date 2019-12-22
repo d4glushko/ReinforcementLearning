@@ -1,5 +1,6 @@
 import typing
 import numpy as np
+import random
 import matplotlib
 import torch
 matplotlib.use("TKAgg")
@@ -21,10 +22,11 @@ class NoiseLearningAgents(Enum):
 
 class NoiseLearning:
     def __init__(
-        self, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, 
-        metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, use_cuda: bool, 
+        self, enable_exchange: bool, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
+        debug: bool, metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, use_cuda: bool, 
         current_execution: int = 1, total_executions: int = 1, ignore_training_setup: bool = False
     ):
+        self.enable_exchange: bool = enable_exchange
         self.training_episodes: int = training_episodes
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
@@ -88,8 +90,7 @@ class NoiseLearning:
 
                 self.__train_agent_episode(agent, env, metrics, i, j)
 
-            if self.should_swap_agents():
-                self.swap_agents()
+            self.__perform_swap()
 
     def __select_device(self, agent_number, use_cuda):
         cuda_available = torch.cuda.is_available()
@@ -189,8 +190,30 @@ class NoiseLearning:
         plt.xlabel(f"Env Iterations")
         plt.legend(legend, loc='upper left')
 
-    def should_swap_agents(self):
-        pass
+    def __perform_swap(self):
+        if not self.__should_swap_agents():
+            return
 
-    def swap_agents(self):
-        pass
+        agent_number = random.randrange(self.agents_number)
+        if agent_number == 0:
+            self.__swap_environments(agent_number, agent_number + 1)
+        elif agent_number == self.agents_number:
+            self.__swap_environments(agent_number - 1, agent_number)
+        elif random.random() < 0.5:
+            self.__swap_environments(agent_number, agent_number + 1)
+        else:
+            self.__swap_environments(agent_number - 1, agent_number)
+
+    def __should_swap_agents(self):
+        if not self.enable_exchange:
+            return False
+
+        # Idea is to swap each agent once per every 100 iterations (for CartPole DQN) on average
+        iterations_count = 100
+        chance = (1 / iterations_count) * (self.agents_number / 2) # because 2 agents are participating in swap
+        return self.agents_number > 1 and random.random() < chance
+
+    def __swap_environments(self, idx1, idx2):
+        env_buf = self.environments[idx1]
+        self.environments[idx1] = self.environments[idx2]
+        self.environments[idx2] = env_buf

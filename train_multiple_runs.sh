@@ -6,6 +6,7 @@ AGENTS_NUMBER=10
 ENV_NAME='CartPole-v1'
 AGENT='DQN'
 NOISE_ENV_STEP=0.1
+ENABLE_EXCHANGE=true
 
 DEBUG=false
 USE_CUDA=true
@@ -15,7 +16,7 @@ SECONDS=0
 
 for ((i=1; i <= $EXECUTIONS_NUMBER; i++))
 do
-    python diploma/main.py --current_execution=$i --total_executions=$EXECUTIONS_NUMBER --agents_number=$AGENTS_NUMBER --env_name=$ENV_NAME --agent=$AGENT --noise_env_step=$NOISE_ENV_STEP --debug=$DEBUG --use_cuda=$USE_CUDA --training_episodes=$TRAINING_EPISODES
+    python diploma/main.py --current_execution=$i --total_executions=$EXECUTIONS_NUMBER --agents_number=$AGENTS_NUMBER --env_name=$ENV_NAME --agent=$AGENT --noise_env_step=$NOISE_ENV_STEP --debug=$DEBUG --use_cuda=$USE_CUDA --training_episodes=$TRAINING_EPISODES --enable_exchange=$ENABLE_EXCHANGE
 done
 
 DURATION=$SECONDS
