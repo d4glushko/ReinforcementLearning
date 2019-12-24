@@ -27,6 +27,15 @@ class Metrics:
     def append(self, metric: Metric):
         self.metrics.append(metric)
 
+    def extend(self, metrics: 'Metrics'):
+        self.metrics.extend(metrics.metrics)
+
+    def get_unique_sorted_noises(self) -> typing.List[float]:
+        return sorted(list(set([(metric.noise) for metric in self.metrics])))
+
+    def get_by_noise(self, noise: float) -> 'Metrics':
+        return Metrics([metric for metric in self.metrics if metric.noise == noise])
+
     def get_reduced_metrics(self) -> 'Metrics':
         iterations = self.get_sorted_unique_iterations_noises()
         reduced_metrics = [
@@ -60,6 +69,9 @@ class Metrics:
                 metric.iteration >= number_of_elements
         ]
         return Metrics(avgs)
+
+    def get_metric_property(self, property_name: str) -> typing.List[typing.Any]:
+        return [getattr(metric, property_name) for metric in self.metrics]
 
     def to_dict(self) -> dict:
         res = vars(self)
