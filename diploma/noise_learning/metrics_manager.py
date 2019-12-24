@@ -18,46 +18,62 @@ class Metric:
         )
 
 
-class MetricsManager:
-    def __init__(self, number_of_elements: int, number_of_iterations: int):
-        self.number_of_iterations: int = number_of_iterations
-        self.number_of_elements: int = number_of_elements
-        self.scores: typing.List[Metric] = []
-        self.losses: typing.List[Metric] = []
+class Metrics:
+    def __init__(self, metrics: typing.List[Metric] = None):
+        if not metrics:
+            metrics = []
+        self.metrics: typing.List[Metric] = metrics
 
-    def get_mov_avg_scores(self) -> typing.List[Metric]:
-        return self.__get_mov_avgs(MetricsManager.reduce_metric(self.scores))
+    def append(self, metric: Metric):
+        self.metrics.append(metric)
 
-    def get_mov_avg_losses(self) -> typing.List[Metric]:
-        return self.__get_mov_avgs(MetricsManager.reduce_metric(self.losses))
-
-    def __get_mov_avgs(self, metrics: typing.List[Metric]) -> typing.List[Metric]:
-        avgs: typing.List[Metric] = [
+    def get_reduced_metrics(self) -> 'Metrics':
+        iterations = self.get_sorted_unique_iterations_noises()
+        reduced_metrics = [
             Metric(
                 np.array([
                     value.value
-                    for value in metrics
-                    if value.iteration > metric.iteration - self.number_of_elements and 
-                        value.iteration <= metric.iteration
-                ]).mean(), metric.iteration, metric.noise
-            )
-            for metric in metrics 
-            if metric.iteration % self.number_of_iterations == 0 and 
-                metric.iteration >= self.number_of_elements
-        ]
-        return avgs
-
-    @staticmethod
-    def reduce_metric(metrics: typing.List[Metric]) -> typing.List[Metric]:
-        iterations = sorted(list(set([(metric.iteration, metric.noise) for metric in metrics])))
-        reduced_metric = [
-            Metric(
-                np.array([
-                    value.value
-                    for value in metrics
+                    for value in self.metrics
                     if value.iteration == iteration
                 ]).mean(), iteration, noise
             )
             for iteration, noise in iterations
         ]
-        return reduced_metric
+        return Metrics(reduced_metrics)
+
+    def get_sorted_unique_iterations_noises(self) -> typing.List[tuple]:
+        return sorted(list(set([(metric.iteration, metric.noise) for metric in self.metrics])), key=lambda m: m[0])
+
+    def get_mov_avgs(self, number_of_elements: int, number_of_iterations: int) -> 'Metrics':
+        metrics = self.get_reduced_metrics()
+        avgs: typing.List[Metric] = [
+            Metric(
+                np.array([
+                    value.value
+                    for value in self.metrics
+                    if value.iteration > metric.iteration - number_of_elements and 
+                        value.iteration <= metric.iteration
+                ]).mean(), metric.iteration, metric.noise
+            )
+            for metric in self.metrics 
+            if metric.iteration % number_of_iterations == 0 and 
+                metric.iteration >= number_of_elements
+        ]
+        return Metrics(avgs)
+
+    def to_dict(self) -> dict:
+        res = vars(self)
+        res["metrics"] = [metric.to_dict() for metric in res.get("metrics")]
+        return res
+
+    @staticmethod
+    def from_dict(metrics: dict) -> 'Metrics':
+        return Metrics(
+            [Metric.from_dict(metric) for metric in metrics.get("metrics")]
+        )
+
+
+class AgentMetrics:
+    def __init__(self):
+        self.scores: Metrics = Metrics()
+        self.losses: Metrics = Metrics()

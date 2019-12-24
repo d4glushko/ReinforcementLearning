@@ -3,7 +3,7 @@ import os
 import time
 import json
 
-from .metrics_manager import Metric, MetricsManager
+from .metrics_manager import Metric, Metrics
 
 class Settings:
     def __init__(self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float):
@@ -31,8 +31,8 @@ class Settings:
 
 class AgentResults:
     def __init__(self):
-        self.scores: typing.List[Metric] = []
-        self.losses: typing.List[Metric] = []
+        self.scores: Metrics = Metrics()
+        self.losses: Metrics = Metrics()
 
     def add_score(self, score: float, iteration: int, noise: float):
         self.scores.append(Metric(score, iteration, noise))
@@ -42,21 +42,22 @@ class AgentResults:
             self.losses.append(Metric(loss, iteration, noise))
 
     def reduce_results(self):
-        self.scores = MetricsManager.reduce_metric(self.scores)
-        self.losses = MetricsManager.reduce_metric(self.losses)
+        self.scores = self.scores.get_reduced_metrics()
+        self.losses = self.losses.get_reduced_metrics()
 
     def to_dict(self) -> dict:
+        self.reduce_results()
         res = vars(self)
-        res["scores"] = [score.to_dict() for score in res.get("scores")]
-        res["losses"] = [loss.to_dict() for loss in res.get("losses")]
+        res["scores"] = res.get("scores").to_dict()
+        res["losses"] = res.get("losses").to_dict()
         return res
 
     @staticmethod
     def from_dict(results: dict) -> 'AgentResults':
-        return AgentResults(
-            [Metric.from_dict(score) for score in results.get("scores")], 
-            [Metric.from_dict(loss) for loss in results.get("losses")]
-        )
+        agent_results = AgentResults()
+        agent_results.scores = Metrics.from_dict(results.get('scores'))
+        agent_results.losses = Metrics.from_dict(results.get('losses'))
+        return agent_results
 
 
 
@@ -68,7 +69,7 @@ class ResultsManager:
     def __init__(self, settings: Settings):
         self.settings: Settings = settings
 
-    def save_results(self, agent_results: typing.List[AgentResults]):
+    def save_results(self, agents_results: typing.List[AgentResults]):
         now = str(int(time.time()))
         target_path = os.path.join(*self.results_path, now)
         if not os.path.exists(target_path):
@@ -78,13 +79,12 @@ class ResultsManager:
         self.__save_json(settings_file_path, self.settings.to_dict())
 
         for i in range(self.settings.agents_number):
-            agent_result = agent_results[i]
-            agent_result.reduce_results()
+            agent_results = agents_results[i]
             agent_file_path = os.path.join(target_path, self.agent_filename.format(i))
-            self.__save_json(agent_file_path, agent_result.to_dict())
+            self.__save_json(agent_file_path, agent_results.to_dict())
 
     def get_results(self) -> typing.List[typing.List[AgentResults]]:
-        agent_results: typing.List[typing.List[AgentResults]] = []
+        agents_results: typing.List[typing.List[AgentResults]] = []
         source_path = os.path.join(*self.results_path)
         for f in os.scandir(source_path):
             if not f.is_dir():
@@ -96,14 +96,14 @@ class ResultsManager:
             if not self.settings.is_same_settings(agent_settings):
                 continue
             
-            current_agent_results: typing.List[AgentResults] = []
+            current_agents_results: typing.List[AgentResults] = []
             for i in range(self.settings.agents_number):
                 agent_file_path = os.path.join(result_dir, self.agent_filename.format(i))
-                current_agent_results.append(AgentResults.from_dict(self.__get_json(agent_file_path)))
+                current_agents_results.append(AgentResults.from_dict(self.__get_json(agent_file_path)))
             
-            agent_results.append(current_agent_results)
+            agents_results.append(current_agents_results)
             
-        return agent_results
+        return agents_results
 
     def __get_json(self, file_path: str) -> dict:
         with open(file_path) as json_file:
