@@ -12,9 +12,6 @@ def main(arguments):
     noise_env_step = arguments.noise_env_step
     enable_exchange = arguments.enable_exchange
 
-    metrics_number_of_elements = arguments.metrics_number_of_elements
-    metrics_number_of_iterations = arguments.metrics_number_of_iterations
-
     debug = arguments.debug
     use_cuda = arguments.use_cuda
     training_episodes = arguments.training_episodes
@@ -22,11 +19,8 @@ def main(arguments):
     current_execution = arguments.current_execution
     total_executions = arguments.total_executions
 
-    show_current_result = False
-
     noise_learning = NoiseLearning(
-        enable_exchange, training_episodes, agents_number, env_name, agent, debug, metrics_number_of_elements, 
-        metrics_number_of_iterations, noise_env_step, use_cuda, 
+        enable_exchange, training_episodes, agents_number, env_name, agent, debug, noise_env_step, use_cuda, 
         current_execution=current_execution, total_executions=total_executions
     )
 
@@ -37,10 +31,6 @@ def main(arguments):
 
     noise_learning.save_results()
 
-    if show_current_result:
-        noise_learning.show_metrics()
-        input("Press <ENTER> to continue")
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -49,9 +39,6 @@ if __name__ == '__main__':
     parser.add_argument('--agent', type=str, default='DQN')
     parser.add_argument('--noise_env_step', type=float, default=0.1)
     parser.add_argument('--enable_exchange', type=str2bool, default=True)
-
-    parser.add_argument('--metrics_number_of_elements', type=int, default=100)
-    parser.add_argument('--metrics_number_of_iterations', type=int, default=50)
 
     parser.add_argument('--debug', type=str2bool, default=False)
     parser.add_argument('--use_cuda', type=str2bool, default=True)

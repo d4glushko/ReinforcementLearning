@@ -3,7 +3,7 @@ import os
 import time
 import json
 
-from .metrics_manager import Metric
+from .metrics_manager import Metric, MetricsManager
 
 class Settings:
     def __init__(self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float):
@@ -30,9 +30,20 @@ class Settings:
 
 
 class AgentResults:
-    def __init__(self, scores: typing.List[Metric], losses: typing.List[Metric]):
-        self.scores: typing.List[Metric] = scores
-        self.losses: typing.List[Metric] = losses
+    def __init__(self):
+        self.scores: typing.List[Metric] = []
+        self.losses: typing.List[Metric] = []
+
+    def add_score(self, score: float, iteration: int, noise: float):
+        self.scores.append(Metric(score, iteration, noise))
+        
+    def add_loss(self, loss: typing.Optional[float], iteration: int, noise: float):
+        if loss != None:
+            self.losses.append(Metric(loss, iteration, noise))
+
+    def reduce_results(self):
+        self.scores = MetricsManager.reduce_metric(self.scores)
+        self.losses = MetricsManager.reduce_metric(self.losses)
 
     def to_dict(self) -> dict:
         res = vars(self)
@@ -54,24 +65,25 @@ class ResultsManager:
     settings_filename = "settings.txt"
     agent_filename = "agent{}.txt"
 
-    def __init__(self):
-        pass
+    def __init__(self, settings: Settings):
+        self.settings: Settings = settings
 
-    def save_results(self, settings: Settings, agent_results: typing.List[AgentResults]):
+    def save_results(self, agent_results: typing.List[AgentResults]):
         now = str(int(time.time()))
         target_path = os.path.join(*self.results_path, now)
         if not os.path.exists(target_path):
             os.makedirs(target_path)
 
         settings_file_path = os.path.join(target_path, self.settings_filename)
-        self.__save_json(settings_file_path, settings.to_dict())
+        self.__save_json(settings_file_path, self.settings.to_dict())
 
-        for i in range(settings.agents_number):
+        for i in range(self.settings.agents_number):
             agent_result = agent_results[i]
+            agent_result.reduce_results()
             agent_file_path = os.path.join(target_path, self.agent_filename.format(i))
             self.__save_json(agent_file_path, agent_result.to_dict())
 
-    def get_results(self, settings: Settings) -> typing.List[typing.List[AgentResults]]:
+    def get_results(self) -> typing.List[typing.List[AgentResults]]:
         agent_results: typing.List[typing.List[AgentResults]] = []
         source_path = os.path.join(*self.results_path)
         for f in os.scandir(source_path):
@@ -81,11 +93,11 @@ class ResultsManager:
             result_dir = f.path
             settings_file_path = os.path.join(result_dir, self.settings_filename)
             agent_settings = Settings.from_dict(self.__get_json(settings_file_path))
-            if not settings.is_same_settings(agent_settings):
+            if not self.settings.is_same_settings(agent_settings):
                 continue
             
             current_agent_results: typing.List[AgentResults] = []
-            for i in range(settings.agents_number):
+            for i in range(self.settings.agents_number):
                 agent_file_path = os.path.join(result_dir, self.agent_filename.format(i))
                 current_agent_results.append(AgentResults.from_dict(self.__get_json(agent_file_path)))
             
@@ -102,5 +114,3 @@ class ResultsManager:
     def __save_json(self, file_path: str, data: dict):
         with open(file_path, 'w') as outfile:
             json.dump(data, outfile)
-
-    
