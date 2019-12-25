@@ -107,7 +107,7 @@ class NoiseLearning:
 
     def __setup_agents_results(self):
         self.results_manager: ResultsManager = ResultsManager(
-            Settings(self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step)
+            Settings(self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.enable_exchange)
         )
         self.agents_results: typing.List[AgentResults] = [
             AgentResults() for i in range(self.agents_number)

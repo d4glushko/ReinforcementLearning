@@ -124,7 +124,7 @@ class Visualizer:
             legend.append(f"Noise = {noise:.2f}")
             
         fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) for Agent {agent_number}")
-        plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
+        plt.ylabel(f"Moving avg over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
         plt.xlabel(f"Iterations")
         plt.legend(legend, loc='upper left')
 
@@ -144,7 +144,7 @@ class Visualizer:
             legend.append(f"Noise = {noise:.2f}")
             
         fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) for Agent {agent_number}. TEST")
-        plt.ylabel(f"Moving avg over the last {metrics.number_of_elements} elements every {metrics.number_of_iterations} iterations")
+        plt.ylabel(f"Moving avg over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
         plt.xlabel(f"Iterations")
         plt.legend(legend, loc='upper left')
 

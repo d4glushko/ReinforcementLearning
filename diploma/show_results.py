@@ -1,7 +1,8 @@
 import argparse
 import time
+import numbers
 
-from utils import str2bool
+from utils import str2bool, int_or_none
 from noise_learning.noise_learning import NoiseLearningAgents
 from noise_learning.visualizer import Visualizer
 
@@ -41,8 +42,8 @@ if __name__ == '__main__':
     parser.add_argument('--metrics_number_of_elements', type=int, default=100)
     parser.add_argument('--metrics_number_of_iterations', type=int, default=50)
 
-    parser.add_argument('--executions_count', type=int)
-    parser.add_argument('--executions_from', type=int)
+    parser.add_argument('--executions_count', type=int_or_none)
+    parser.add_argument('--executions_from', type=int_or_none)
 
     args = parser.parse_args()
     print(f"Called with args: {args}")
