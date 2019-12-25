@@ -43,7 +43,7 @@ class Visualizer:
     def __setup_colors(self):
         name = "Set3"
         cmap = get_cmap(name)
-        self.colors = ['red', 'blue']
+        self.colors = cmap.colors
 
     def __setup_metrics(self):
         self.results_manager: ResultsManager = ResultsManager(
