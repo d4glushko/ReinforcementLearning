@@ -1,5 +1,7 @@
 import typing
 import numpy as np
+from collections import Counter 
+
 
 
 class Metric:
@@ -37,37 +39,42 @@ class Metrics:
         return Metrics([metric for metric in self.metrics if metric.noise == noise])
 
     def get_reduced_metrics(self) -> 'Metrics':
-        iterations = self.get_sorted_unique_iterations_noises()
-        reduced_metrics = [
-            Metric(
-                np.array([
-                    value.value
-                    for value in self.metrics
-                    if value.iteration == iteration
-                ]).mean(), iteration, noise
-            )
-            for iteration, noise in iterations
-        ]
+        iterations = self.get_sorted_unique_iterations()
+        reduced_metrics: typing.List[Metric] = []
+        for iteration in iterations:
+            values = []
+            noises = []
+            for local_metric in self.metrics:
+                if local_metric.iteration != iteration:
+                    continue
+                values.append(local_metric.value)
+                noises.append(local_metric.noise)
+
+            value = np.array(values).mean()
+            noise = Counter(noises).most_common(1)[0][0]
+            reduced_metrics.append(Metric(value, iteration, noise))
         return Metrics(reduced_metrics)
 
-    def get_sorted_unique_iterations_noises(self) -> typing.List[tuple]:
-        return sorted(list(set([(metric.iteration, metric.noise) for metric in self.metrics])), key=lambda m: m[0])
+    def get_sorted_unique_iterations(self) -> typing.List[int]:
+        return sorted(list(set([metric.iteration for metric in self.metrics])))
 
     def get_mov_avgs(self, number_of_elements: int, number_of_iterations: int) -> 'Metrics':
-        metrics = self.get_reduced_metrics()
-        avgs: typing.List[Metric] = [
-            Metric(
-                np.array([
-                    value.value
-                    for value in self.metrics
-                    if value.iteration > metric.iteration - number_of_elements and 
-                        value.iteration <= metric.iteration
-                ]).mean(), metric.iteration, metric.noise
-            )
-            for metric in self.metrics 
-            if metric.iteration % number_of_iterations == 0 and 
-                metric.iteration >= number_of_elements
-        ]
+        metrics = self.get_reduced_metrics().metrics
+        avgs: typing.List[Metric] = []
+        for metric in metrics:
+            if not (metric.iteration % number_of_iterations == 0 and metric.iteration >= number_of_elements):
+                continue
+            values = []
+            noises = []
+            for local_metric in metrics:
+                if not (local_metric.iteration > metric.iteration - number_of_elements and local_metric.iteration <= metric.iteration):
+                    continue
+                values.append(local_metric.value)
+                noises.append(local_metric.noise)
+
+            value = np.array(values).mean()
+            noise = Counter(noises).most_common(1)[0][0]
+            avgs.append(Metric(value, metric.iteration, noise))
         return Metrics(avgs)
 
     def get_metric_property(self, property_name: str) -> typing.List[typing.Any]:
