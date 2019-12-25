@@ -19,13 +19,14 @@ class NoiseLearningAgents(Enum):
 
 class Visualizer:
     def __init__(
-        self, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
+        self, enable_exchange: bool, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
         metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float
     ):
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
         self.noise_env_step: float = noise_env_step
         self.env_name: str = env_name
+        self.enable_exchange: bool = enable_exchange
 
         self.metrics_number_of_elements: int = metrics_number_of_elements
         self.metrics_number_of_iterations: int = metrics_number_of_iterations
@@ -43,7 +44,7 @@ class Visualizer:
 
     def __setup_metrics(self):
         self.results_manager: ResultsManager = ResultsManager(
-            Settings(self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step)
+            Settings(self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.enable_exchange)
         )
         self.agent_metrics: typing.List[AgentMetrics] = [
             AgentMetrics() for i in range(self.agents_number)

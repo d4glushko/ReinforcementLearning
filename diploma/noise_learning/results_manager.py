@@ -6,17 +6,19 @@ import json
 from .metrics_manager import Metric, Metrics
 
 class Settings:
-    def __init__(self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float):
+    def __init__(self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, enable_exchange: bool):
         self.agents_number: int = agents_number
         self.env_name: str = env_name
         self.noise_learning_agent: str = noise_learning_agent
         self.noise_env_step: float = noise_env_step
+        self.enable_exchange: bool = enable_exchange
 
     def is_same_settings(self, settings: 'Settings'):
         return self.agents_number == settings.agents_number and \
                 self.env_name == settings.env_name and \
                 self.noise_learning_agent == settings.noise_learning_agent and \
-                self.noise_env_step == settings.noise_env_step
+                self.noise_env_step == settings.noise_env_step and \
+                self.enable_exchange == settings.enable_exchange
 
     def to_dict(self) -> dict:
         return vars(self)
@@ -25,7 +27,7 @@ class Settings:
     def from_dict(settings: dict) -> 'Settings':
         return Settings(
             settings.get("agents_number"), settings.get("env_name"), settings.get("noise_learning_agent"), 
-            settings.get("noise_env_step")
+            settings.get("noise_env_step"), settings.get("enable_exchange")
         )
 
 
