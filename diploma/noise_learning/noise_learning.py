@@ -23,8 +23,10 @@ class NoiseLearningAgents(Enum):
 class NoiseLearning:
     def __init__(
         self, enable_exchange: bool, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
-        debug: bool, noise_env_step: float, use_cuda: bool, current_execution: int = 1, total_executions: int = 1
+        debug: bool, noise_env_step: float, use_cuda: bool, warm_up_steps: int, exchange_steps: int, current_execution: int = 1, total_executions: int = 1
     ):
+        self.warm_up_steps: int = warm_up_steps
+        self.exchange_steps: int = exchange_steps
         self.enable_exchange: bool = enable_exchange
         self.training_episodes: int = training_episodes
         self.agents_number: int = agents_number
@@ -56,7 +58,8 @@ class NoiseLearning:
 
                 self.__train_agent_episode(agent, env, agent_results, i, j)
 
-            self.__perform_random_swap()
+            if i % self.exchange_steps == 0 and i >= self.warm_up_steps:
+                self.__perform_random_swap()
 
     def save_results(self):
         self.results_manager.save_results(self.agents_results)
