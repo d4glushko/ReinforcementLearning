@@ -85,12 +85,25 @@ class ResultsManager:
             agent_file_path = os.path.join(target_path, self.agent_filename.format(i))
             self.__save_json(agent_file_path, agent_results.to_dict())
 
-    def get_results(self) -> typing.List[typing.List[AgentResults]]:
+    def get_results(self, executions_count: int = None, executions_from: int = None) -> typing.List[typing.List[AgentResults]]:
+        if not executions_from:
+            executions_from = 0
+
         agents_results: typing.List[typing.List[AgentResults]] = []
         source_path = os.path.join(*self.results_path)
+
+        counter = -1
         for f in os.scandir(source_path):
             if not f.is_dir():
                 continue
+
+            counter = counter + 1
+
+            if counter < executions_from:
+                continue
+
+            if executions_count and (counter >= executions_count + executions_from):
+                break
 
             result_dir = f.path
             settings_file_path = os.path.join(result_dir, self.settings_filename)

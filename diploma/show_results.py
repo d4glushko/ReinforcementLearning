@@ -16,9 +16,12 @@ def main(arguments):
     metrics_number_of_elements = arguments.metrics_number_of_elements
     metrics_number_of_iterations = arguments.metrics_number_of_iterations
 
+    executions_count = arguments.executions_count
+    executions_from = arguments.executions_from
+
     visualizer = Visualizer(
         enable_exchange, agents_number, env_name, agent, metrics_number_of_elements, 
-        metrics_number_of_iterations, noise_env_step
+        metrics_number_of_iterations, noise_env_step, executions_count, executions_from
     )
 
     visualizer.set_metrics()
@@ -37,6 +40,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--metrics_number_of_elements', type=int, default=100)
     parser.add_argument('--metrics_number_of_iterations', type=int, default=50)
+
+    parser.add_argument('--executions_count', type=int)
+    parser.add_argument('--executions_from', type=int)
 
     args = parser.parse_args()
     print(f"Called with args: {args}")
