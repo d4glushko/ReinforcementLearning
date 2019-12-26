@@ -82,8 +82,8 @@ class NoiseLearning:
         if not self.enable_exchange or self.agents_number == 1:
             return False
 
-        # Idea is to swap each agent once per every 100 iterations (for CartPole DQN) on average
-        iterations_count = 100
+        # Idea is to swap each agent once per every 100 iterations (for CartPole DQN) on average. 
+        iterations_count = 100 / self.exchange_steps
         chance = (1 / iterations_count) * (self.agents_number / 2) # because 2 agents are participating in swap
         return random.random() < chance
 
