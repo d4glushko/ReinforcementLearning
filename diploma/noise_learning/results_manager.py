@@ -1,6 +1,7 @@
 import typing
 import os
 import time
+import datetime
 import json
 
 from .metrics_manager import Metric, Metrics
@@ -70,7 +71,8 @@ class ResultsManager:
         self.settings: Settings = settings
 
     def save_results(self, agents_results: typing.List[AgentResults]):
-        now = str(int(time.time()))
+        ts = time.time()
+        now = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')
         target_path = os.path.join(*self.results_path, now)
         if not os.path.exists(target_path):
             os.makedirs(target_path)

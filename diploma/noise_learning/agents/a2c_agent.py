@@ -6,22 +6,26 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torch.autograd as autograd
 from torch.autograd import Variable
+from torch.distributions import Categorical
 
 from .base_agent import BaseAgent, AgentHyperParams
 
 # Discount factor. Model is not very sensitive to this value.
-GAMMA = .95
+GAMMA = .99
 
 # LR of 3e-2 explodes the gradients, LR of 3e-4 trains slower
-LR = 3e-3
+LR = 1e-3
 
 # OpenAI baselines uses nstep of 5.
 N_STEPS = 20
+
+eps = 1.19209e-07
 
 HIDDEN_LAYERS_SIZES = [64, 128, 64]  # NN hidden layer size
 
 
 class A2CAgentHyperParams(AgentHyperParams):
+
     def __init__(self):
         self.learning_rate: float = LR
         self.gamma: float = GAMMA
@@ -43,9 +47,11 @@ class A2CAgent(BaseAgent):
 
     def __init__(self, observation_space: int, action_space: int, device, debug: bool):
         super().__init__(observation_space, action_space, device, debug)
+        self.gamma: float = GAMMA
+        self.n_steps: int = N_STEPS
         self.memory: typing.List[MemoryCell] = []
-        self.model = A2CCartPoleNN(observation_space, action_space, self.agent_hyper_params.hidden_layers_sizes).to(self.device)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.agent_hyper_params.learning_rate)
+        self.model = A2CCartPoleNN(observation_space, action_space).to(self.device)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=LR)
         
 
     def act(self, state):
@@ -53,11 +59,13 @@ class A2CAgent(BaseAgent):
         s = Variable(torch.from_numpy(state).float().unsqueeze(0))
 
         action_probs = self.model.get_action_probs(s)
+        m = Categorical(action_probs)
+        action = m.sample()
 
-        sample = action_probs.multinomial(self.action_space)
-        action_value, action_index = sample.max(dim=1)
-        action = action_index.data[0].item()
-        return action
+        # sample = action_probs.multinomial(self.action_space)
+        # action_value, action_index = sample.max(dim=1)
+        # action = action_index.data[0].item()
+        return action.item()
 
     def remember(self, state, action, reward, done, next_state):
         super().remember(state, action, reward, done, next_state)
@@ -65,11 +73,11 @@ class A2CAgent(BaseAgent):
 
     
     def reflect(self):
-        if len(self.memory) < self.agent_hyper_params.steps_number:
-            return
+        # if len(self.memory) < self.n_steps:
+        #     return
 
         super().reflect()
-        # Ground trutch labels
+        # Ground truth labels
         state_values_true = self.__calc_actual_state_values()
 
         s = Variable(torch.FloatTensor([m.state for m in self.memory], device=self.device))
@@ -83,8 +91,9 @@ class A2CAgent(BaseAgent):
         advantages = state_values_true - state_values_est
 
         entropy = (action_probs * action_log_probs).sum(1).mean()
-        action_gain = (chosen_action_log_probs * advantages).mean()
-        value_loss = advantages.pow(2).mean()
+        action_gain = (chosen_action_log_probs * advantages).sum()
+        # value_loss = advantages.pow(2).mean()
+        value_loss = F.smooth_l1_loss(state_values_est, state_values_true, reduction='sum')
         total_loss = value_loss - action_gain - 0.0001 * entropy
         
         self.optimizer.zero_grad()
@@ -110,29 +119,32 @@ class A2CAgent(BaseAgent):
         for r in range(1, len(memory_copy)):
             this_return: float = 0
             if not memory_copy[r].done:
-                this_return = memory_copy[r].reward + next_return * self.agent_hyper_params.gamma
+                this_return = memory_copy[r].reward + next_return * self.gamma
 
             state_values.append(this_return)
             next_return = this_return
 
         state_values.reverse()
-        result = Variable(torch.FloatTensor(state_values, device=self.device)).unsqueeze(1)
+
+        result = torch.FloatTensor(state_values, device=self.device)
+        result = (result - result.mean()) / (result.std() + eps)
+        result = Variable(result).unsqueeze(1)
 
         return result
 
 
 class A2CCartPoleNN(nn.Module):
-    def __init__(self, observation_space: int, action_space: int, hidden_layers_sizes: typing.List[int]):
+    def __init__(self, observation_space: int, action_space: int):
         super(A2CCartPoleNN, self).__init__()
         self.action_space: int = action_space
         self.observation_space: int = observation_space
 
-        self.linear1 = nn.Linear(observation_space, hidden_layers_sizes[0])
-        self.linear2 = nn.Linear(hidden_layers_sizes[0], hidden_layers_sizes[1])
-        self.linear3 = nn.Linear(hidden_layers_sizes[1], hidden_layers_sizes[2])
+        self.linear1 = nn.Linear(observation_space, 64)
+        self.linear2 = nn.Linear(64, 128)
+        # self.linear3 = nn.Linear(128, 64)
 
-        self.actor = nn.Linear(hidden_layers_sizes[2], action_space)
-        self.critic = nn.Linear(hidden_layers_sizes[2], 1)
+        self.actor = nn.Linear(128, action_space)
+        self.critic = nn.Linear(128, 1)
 
     def forward(self, x):
         # print(f"Before lin1: {x}")
@@ -142,8 +154,8 @@ class A2CCartPoleNN(nn.Module):
         x = F.relu(x)
         x = self.linear2(x)
         x = F.relu(x)
-        x = self.linear3(x)
-        x = F.relu(x)
+        # x = self.linear3(x)
+        # x = F.relu(x)
         return x
 
     # Actor head
