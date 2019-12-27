@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from collections import namedtuple
 
-from .base_agent import BaseAgent
+from .base_agent import BaseAgent, AgentHyperParams
 
 
 # hyper parameters
@@ -19,13 +19,25 @@ EXPLORATION_MIN = 0.01
 EXPLORATION_DECAY = 0.995
 GAMMA = 0.9  # Q-learning discount factor
 LR = 0.001  # NN optimizer learning rate
-HIDDEN_LAYER = 24  # NN hidden layer size
+HIDDEN_LAYERS_SIZES = [24, 24]  # NN hidden layer size
 BATCH_SIZE = 128  # Q-learning batch size
 
 MEMORY_SIZE = 300000
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
+
+class DqnAgentHyperParams(AgentHyperParams):
+    def __init__(self):
+        self.learning_rate: float = LR
+        self.gamma: float = GAMMA
+        self.hidden_layers_sizes: typing.List[int] = HIDDEN_LAYERS_SIZES
+        self.batch_size: int = BATCH_SIZE
+        self.memory_size: int = MEMORY_SIZE
+        self.exploration_max: float = EXPLORATION_MAX
+        self.exploration_min: float = EXPLORATION_MIN
+        self.exploration_decay: float = EXPLORATION_DECAY
+
 
 class ReplayMemory:
     def __init__(self, capacity):
@@ -47,11 +59,11 @@ class ReplayMemory:
         return len(self.memory)
 
 class Network(nn.Module):
-    def __init__(self, observation_space: int, action_space: int):
+    def __init__(self, observation_space: int, action_space: int, hidden_layers_sizes: typing.List[int]):
         super(Network, self).__init__()
-        self.l1 = nn.Linear(observation_space, HIDDEN_LAYER)
-        self.l2 = nn.Linear(HIDDEN_LAYER, HIDDEN_LAYER)
-        self.l3 = nn.Linear(HIDDEN_LAYER, action_space)
+        self.l1 = nn.Linear(observation_space, hidden_layers_sizes[0])
+        self.l2 = nn.Linear(hidden_layers_sizes[0], hidden_layers_sizes[1])
+        self.l3 = nn.Linear(hidden_layers_sizes[1], action_space)
 
         # Manual initialization of weights and biases
         # with torch.no_grad():
@@ -70,11 +82,11 @@ class Network(nn.Module):
 
 class DqnAgent(BaseAgent):
     def __init__(self, observation_space: int, action_space: int, device, debug: bool):
-        super().__init__(observation_space, action_space, device, debug)
-        self.exploration_rate = EXPLORATION_MAX
-        self.memory = ReplayMemory(MEMORY_SIZE)
+        super().__init__(DqnAgentHyperParams(), observation_space, action_space, device, debug)
+        self.exploration_rate = self.agent_hyper_params.exploration_max
+        self.memory = ReplayMemory(self.agent_hyper_params.memory_size)
 
-        self.model = Network(observation_space, action_space).to(self.device, non_blocking=True)
+        self.model = Network(observation_space, action_space, self.agent_hyper_params.hidden_layer).to(self.device, non_blocking=True)
 
         # Add debug hooks
         # def printdata(self, input, output):
@@ -89,7 +101,7 @@ class DqnAgent(BaseAgent):
         # self.model.register_forward_hook(printdata)
         # self.model.register_backward_hook(printgraddata)
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=LR)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.agent_hyper_params.learning_rate)
 
     def remember(self, state, action, reward, done, next_state):
         super().remember(state, action, reward, done, next_state)
@@ -111,19 +123,19 @@ class DqnAgent(BaseAgent):
             return self.model(torch.tensor([state], dtype=torch.float).to(self.device, non_blocking=True)).max(1)[1].item()
 
     def reflect(self):
-        if len(self.memory) < BATCH_SIZE:
+        if len(self.memory) < self.agent_hyper_params.batch_size:
             return
 
         super().reflect()
 
-        loss = self.__get_loss(self.memory.sample(BATCH_SIZE))
+        loss = self.__get_loss(self.memory.sample(self.agent_hyper_params.batch_size))
         # Optimize the model
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
-        self.exploration_rate *= EXPLORATION_DECAY
-        self.exploration_rate = max(EXPLORATION_MIN, self.exploration_rate)
+        self.exploration_rate *= self.agent_hyper_params.exploration_decay
+        self.exploration_rate = max(self.agent_hyper_params.exploration_min, self.exploration_rate)
         self.last_loss = loss.item()
 
     def __get_loss(self, transitions: typing.List[Transition]):
@@ -152,10 +164,10 @@ class DqnAgent(BaseAgent):
         # on the model; selecting their best reward with max(1)[0].
         # This is merged based on the mask, such that we'll have either the expected
         # state value or 0 in case the state was final.
-        next_state_values = torch.zeros(BATCH_SIZE).to(self.device, non_blocking=True)
+        next_state_values = torch.zeros(self.agent_hyper_params.batch_size).to(self.device, non_blocking=True)
         next_state_values[non_final_mask] = self.model(non_final_next_states).detach().max(1)[0]
         # Compute the expected Q values
-        expected_state_action_values = (next_state_values * GAMMA) + reward_batch
+        expected_state_action_values = (next_state_values * self.agent_hyper_params.gamma) + reward_batch
 
         # Compute MSE Loss
         loss = nn.MSELoss()

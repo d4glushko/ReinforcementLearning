@@ -1,7 +1,13 @@
 import typing
 
+from ..utils.serializable import DictSerializable
+
+class AgentHyperParams(DictSerializable):
+    pass
+
 class BaseAgent():
-    def __init__(self, observation_space: int, action_space: int, device, debug: bool):
+    def __init__(self, agent_hyper_params: AgentHyperParams, observation_space: int, action_space: int, device, debug: bool):
+        self.agent_hyper_params: AgentHyperParams = agent_hyper_params
         self.observation_space: int = observation_space
         self.action_space: int = action_space
         self.device = device
