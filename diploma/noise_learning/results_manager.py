@@ -4,14 +4,7 @@ import time
 import json
 
 from .metrics_manager import Metric, Metrics
-
-class DictSerializable:
-    @classmethod
-    def from_dict(cls, data: dict) -> 'DictSerializable':
-        return cls(**data)
-
-    def to_dict(self) -> dict:
-        return vars(self)
+from .utils.serializable import DictSerializable
 
 
 class Settings(DictSerializable):

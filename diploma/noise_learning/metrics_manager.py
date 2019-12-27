@@ -2,7 +2,7 @@ import typing
 import numpy as np
 from collections import Counter 
 
-from .results_manager import DictSerializable
+from .utils.serializable import DictSerializable
 
 
 class Metric(DictSerializable):
