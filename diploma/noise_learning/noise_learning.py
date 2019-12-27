@@ -58,28 +58,31 @@ class NoiseLearning:
 
                 self.__train_agent_episode(agent, env, agent_results, i, j)
 
-            if i % self.exchange_steps == 0 and i >= self.warm_up_steps:
-                self.__perform_random_swap()
+            self.__perform_random_swap(i)
 
     def save_results(self):
         self.results_manager.save_results(self.agents_results)
 
-    def __perform_random_swap(self):
-        if not self.__should_swap_agents():
+    def __perform_random_swap(self, iter: int):
+        if not self.__should_swap_agents(iter):
             return
 
         agent_number = random.randrange(self.agents_number)
+        print(f"Chosen agent {agent_number}. Iter {iter}")
         if agent_number == 0:
             self.__swap_environments(agent_number, agent_number + 1)
-        elif agent_number == self.agents_number:
+        elif agent_number == self.agents_number - 1:
             self.__swap_environments(agent_number - 1, agent_number)
         elif random.random() < 0.5:
             self.__swap_environments(agent_number, agent_number + 1)
         else:
             self.__swap_environments(agent_number - 1, agent_number)
 
-    def __should_swap_agents(self):
+    def __should_swap_agents(self, iter: int):
         if not self.enable_exchange or self.agents_number == 1:
+            return False
+
+        if not (iter % self.exchange_steps == 0 and iter >= self.warm_up_steps):
             return False
 
         # Idea is to swap each agent once per every 100 iterations (for CartPole DQN) on average. 
@@ -88,6 +91,7 @@ class NoiseLearning:
         return random.random() < chance
 
     def __swap_environments(self, idx1, idx2):
+        print(f"Swapping envs {idx1} {idx2}")
         env_buf = self.environments[idx1]
         self.environments[idx1] = self.environments[idx2]
         self.environments[idx2] = env_buf

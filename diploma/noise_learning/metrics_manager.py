@@ -2,25 +2,17 @@ import typing
 import numpy as np
 from collections import Counter 
 
+from .results_manager import DictSerializable
 
 
-class Metric:
+class Metric(DictSerializable):
     def __init__(self, value: float, iteration: int, noise: float):
         self.value: float = value
         self.iteration: int = iteration
         self.noise: float = noise
 
-    def to_dict(self) -> dict:
-        return vars(self)
 
-    @staticmethod
-    def from_dict(metric: dict) -> 'Metric':
-        return Metric(
-            metric.get("value"), metric.get("iteration"), metric.get("noise")
-        )
-
-
-class Metrics:
+class Metrics(DictSerializable):
     def __init__(self, metrics: typing.List[Metric] = None):
         if not metrics:
             metrics = []
@@ -91,7 +83,7 @@ class Metrics:
         return [getattr(metric, property_name) for metric in self.metrics]
 
     def to_dict(self) -> dict:
-        res = vars(self)
+        res = super().to_dict()
         res["metrics"] = [metric.to_dict() for metric in res.get("metrics")]
         return res
 

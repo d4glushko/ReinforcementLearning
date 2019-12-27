@@ -5,7 +5,16 @@ import json
 
 from .metrics_manager import Metric, Metrics
 
-class Settings:
+class DictSerializable:
+    @classmethod
+    def from_dict(cls, data: dict) -> 'DictSerializable':
+        return cls(**data)
+
+    def to_dict(self) -> dict:
+        return vars(self)
+
+
+class Settings(DictSerializable):
     def __init__(self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, enable_exchange: bool):
         self.agents_number: int = agents_number
         self.env_name: str = env_name
@@ -20,18 +29,8 @@ class Settings:
                 self.noise_env_step == settings.noise_env_step and \
                 self.enable_exchange == settings.enable_exchange
 
-    def to_dict(self) -> dict:
-        return vars(self)
 
-    @staticmethod
-    def from_dict(settings: dict) -> 'Settings':
-        return Settings(
-            settings.get("agents_number"), settings.get("env_name"), settings.get("noise_learning_agent"), 
-            settings.get("noise_env_step"), settings.get("enable_exchange")
-        )
-
-
-class AgentResults:
+class AgentResults(DictSerializable):
     def __init__(self):
         self.scores: Metrics = Metrics()
         self.losses: Metrics = Metrics()
@@ -49,7 +48,7 @@ class AgentResults:
 
     def to_dict(self) -> dict:
         self.reduce_results()
-        res = vars(self)
+        res = super().to_dict()
         res["scores"] = res.get("scores").to_dict()
         res["losses"] = res.get("losses").to_dict()
         return res
@@ -78,12 +77,12 @@ class ResultsManager:
             os.makedirs(target_path)
 
         settings_file_path = os.path.join(target_path, self.settings_filename)
-        self.__save_json(settings_file_path, self.settings.to_dict())
+        self.__save_dict(settings_file_path, self.settings.to_dict())
 
         for i in range(self.settings.agents_number):
             agent_results = agents_results[i]
             agent_file_path = os.path.join(target_path, self.agent_filename.format(i))
-            self.__save_json(agent_file_path, agent_results.to_dict())
+            self.__save_dict(agent_file_path, agent_results.to_dict())
 
     def get_results(self, executions_count: int = None, executions_from: int = None) -> typing.List[typing.List[AgentResults]]:
         if not executions_from:
@@ -107,25 +106,25 @@ class ResultsManager:
 
             result_dir = f.path
             settings_file_path = os.path.join(result_dir, self.settings_filename)
-            agent_settings = Settings.from_dict(self.__get_json(settings_file_path))
+            agent_settings = Settings.from_dict(self.__get_dict(settings_file_path))
             if not self.settings.is_same_settings(agent_settings):
                 continue
             
             current_agents_results: typing.List[AgentResults] = []
             for i in range(self.settings.agents_number):
                 agent_file_path = os.path.join(result_dir, self.agent_filename.format(i))
-                current_agents_results.append(AgentResults.from_dict(self.__get_json(agent_file_path)))
+                current_agents_results.append(AgentResults.from_dict(self.__get_dict(agent_file_path)))
             
             agents_results.append(current_agents_results)
             
         return agents_results
 
-    def __get_json(self, file_path: str) -> dict:
+    def __get_dict(self, file_path: str) -> dict:
         with open(file_path) as json_file:
             data = json.load(json_file)
         return data
 
 
-    def __save_json(self, file_path: str, data: dict):
+    def __save_dict(self, file_path: str, data: dict):
         with open(file_path, 'w') as outfile:
             json.dump(data, outfile)
