@@ -38,6 +38,11 @@ Run multiple train executions (pass parameter for train executions count. Defaul
 ./train_multiple_runs.sh 5
 ```
 
+Or run in a background process:
+```
+nohup ./train_multiple_runs.sh &
+```
+
 ## Show Results
 For the first time only:
 ```
