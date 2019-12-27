@@ -4,23 +4,29 @@ import time
 import json
 
 from .metrics_manager import Metric, Metrics
-from .utils.serializable import DictSerializable
+from .common.serializable import DictSerializable
+from .agents.base_agent import AgentHyperParams
 
 
 class Settings(DictSerializable):
-    def __init__(self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, enable_exchange: bool):
+    def __init__(
+        self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, enable_exchange: bool, 
+        agent_hyper_params: dict
+    ):
         self.agents_number: int = agents_number
         self.env_name: str = env_name
         self.noise_learning_agent: str = noise_learning_agent
         self.noise_env_step: float = noise_env_step
         self.enable_exchange: bool = enable_exchange
+        self.agent_hyper_params: dict = agent_hyper_params
 
     def is_same_settings(self, settings: 'Settings'):
         return self.agents_number == settings.agents_number and \
                 self.env_name == settings.env_name and \
                 self.noise_learning_agent == settings.noise_learning_agent and \
                 self.noise_env_step == settings.noise_env_step and \
-                self.enable_exchange == settings.enable_exchange
+                self.enable_exchange == settings.enable_exchange and \
+                self.agent_hyper_params == settings.agent_hyper_params
 
 
 class AgentResults(DictSerializable):

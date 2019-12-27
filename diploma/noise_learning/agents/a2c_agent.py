@@ -21,7 +21,7 @@ N_STEPS = 20
 HIDDEN_LAYERS_SIZES = [64, 128, 64]  # NN hidden layer size
 
 
-class DqnAgentHyperParams(AgentHyperParams):
+class A2CAgentHyperParams(AgentHyperParams):
     def __init__(self):
         self.learning_rate: float = LR
         self.gamma: float = GAMMA
@@ -39,8 +39,10 @@ class MemoryCell:
 
 # https://github.com/rgilman33/simple-A2C/blob/master/3_A2C-nstep-TUTORIAL.ipynb
 class A2CAgent(BaseAgent):
+    agent_hyper_params = A2CAgentHyperParams()
+
     def __init__(self, observation_space: int, action_space: int, device, debug: bool):
-        super().__init__(DqnAgentHyperParams(), observation_space, action_space, device, debug)
+        super().__init__(observation_space, action_space, device, debug)
         self.memory: typing.List[MemoryCell] = []
         self.model = A2CCartPoleNN(observation_space, action_space, self.agent_hyper_params.hidden_layers_sizes).to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.agent_hyper_params.learning_rate)

@@ -8,16 +8,12 @@ import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
 from enum import Enum
 
+from .utils import NoiseLearningAgents, choose_agent
 from .agents.base_agent import BaseAgent
 from .agents.a2c_agent import A2CAgent
 from .agents.dqn_agent import DqnAgent
 from .envs.env import EnvironmentWrapper
 from .results_manager import ResultsManager, Settings, AgentResults
-
-
-class NoiseLearningAgents(Enum):
-    DQN = 1
-    A2C = 2
     
 
 class NoiseLearning:
@@ -103,7 +99,7 @@ class NoiseLearning:
 
     def __setup_agents(self):
         self.agents: typing.List[BaseAgent] = [
-            self.__choose_agent(self.noise_learning_agent)(
+            choose_agent(self.noise_learning_agent)(
                 env.observation_space(), env.action_space(), self.__select_device(i, self.use_cuda), self.debug
             )
             for env, i in [
@@ -113,19 +109,16 @@ class NoiseLearning:
         ]
 
     def __setup_agents_results(self):
+        agent_hyper_params = choose_agent(self.noise_learning_agent).agent_hyper_params.to_dict()
         self.results_manager: ResultsManager = ResultsManager(
-            Settings(self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.enable_exchange)
+            Settings(
+                self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.enable_exchange, 
+                agent_hyper_params
+            )
         )
         self.agents_results: typing.List[AgentResults] = [
             AgentResults() for i in range(self.agents_number)
         ]
-
-    def __choose_agent(self, noise_learning_agent: NoiseLearningAgents) -> typing.Type[BaseAgent]:
-        agents_mapping = {
-            NoiseLearningAgents.DQN: DqnAgent,
-            NoiseLearningAgents.A2C: A2CAgent
-        }
-        return agents_mapping[noise_learning_agent]
 
     def __train_agent_episode(
         self, agent: BaseAgent, env: EnvironmentWrapper, agent_results: AgentResults, iteration: int, agent_number: int

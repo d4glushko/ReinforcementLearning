@@ -8,13 +8,9 @@ import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
 from enum import Enum
 
+from .utils import NoiseLearningAgents, choose_agent
 from .metrics_manager import AgentMetrics, Metrics
 from .results_manager import ResultsManager, Settings
-
-
-class NoiseLearningAgents(Enum):
-    DQN = 1
-    A2C = 2
     
 
 class Visualizer:
@@ -46,8 +42,12 @@ class Visualizer:
         self.colors = cmap.colors
 
     def __setup_metrics(self):
+        agent_hyper_params = choose_agent(self.noise_learning_agent).agent_hyper_params.to_dict()
         self.results_manager: ResultsManager = ResultsManager(
-            Settings(self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.enable_exchange)
+            Settings(
+                self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.enable_exchange, 
+                agent_hyper_params
+            )
         )
         self.agent_metrics: typing.List[AgentMetrics] = [
             AgentMetrics() for i in range(self.agents_number)

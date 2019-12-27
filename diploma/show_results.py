@@ -3,7 +3,7 @@ import time
 import numbers
 
 from utils import str2bool, int_or_none
-from noise_learning.noise_learning import NoiseLearningAgents
+from noise_learning.utils import NoiseLearningAgents
 from noise_learning.visualizer import Visualizer
 
 

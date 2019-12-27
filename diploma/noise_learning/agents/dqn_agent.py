@@ -81,12 +81,14 @@ class Network(nn.Module):
         return x
 
 class DqnAgent(BaseAgent):
+    agent_hyper_params = DqnAgentHyperParams()
+
     def __init__(self, observation_space: int, action_space: int, device, debug: bool):
-        super().__init__(DqnAgentHyperParams(), observation_space, action_space, device, debug)
+        super().__init__(observation_space, action_space, device, debug)
         self.exploration_rate = self.agent_hyper_params.exploration_max
         self.memory = ReplayMemory(self.agent_hyper_params.memory_size)
 
-        self.model = Network(observation_space, action_space, self.agent_hyper_params.hidden_layer).to(self.device, non_blocking=True)
+        self.model = Network(observation_space, action_space, self.agent_hyper_params.hidden_layers_sizes).to(self.device, non_blocking=True)
 
         # Add debug hooks
         # def printdata(self, input, output):

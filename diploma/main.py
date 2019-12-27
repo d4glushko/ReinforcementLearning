@@ -2,7 +2,8 @@ import argparse
 import time
 
 from utils import str2bool
-from noise_learning.noise_learning import NoiseLearning, NoiseLearningAgents
+from noise_learning.utils import NoiseLearningAgents
+from noise_learning.noise_learning import NoiseLearning
 
 
 def main(arguments):
