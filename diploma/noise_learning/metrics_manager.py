@@ -77,6 +77,16 @@ class Metrics:
             avgs.append(Metric(value, metric.iteration, noise))
         return Metrics(avgs)
 
+    def fill_noise_duplicates(self) -> 'Metrics':
+        result: typing.List[Metric] = []
+        metrics_len = len(self.metrics)
+        for idx, metric in enumerate(self.metrics):
+            result.append(metric)
+            if idx + 1 < metrics_len and metric.noise != self.metrics[idx + 1].noise:
+                next_metric = self.metrics[idx + 1]
+                result.append(Metric(metric.value, metric.iteration, next_metric.noise))
+        return Metrics(result)
+
     def get_metric_property(self, property_name: str) -> typing.List[typing.Any]:
         return [getattr(metric, property_name) for metric in self.metrics]
 

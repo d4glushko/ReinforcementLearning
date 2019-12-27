@@ -89,9 +89,7 @@ class Visualizer:
     def __plot_by_agent(self):
         for i in range(self.agents_number):
             self.__plot_agent_metric(i, "scores")
-            self.__plot_agent_metric_test(i, "scores")
             self.__plot_agent_metric(i, "losses")
-            self.__plot_agent_metric_test(i, "losses")
 
     def __plot_metrics_by_noise(self, metric_name: str):
         fig = plt.figure()
@@ -114,36 +112,21 @@ class Visualizer:
     def __plot_agent_metric(self, agent_number: int, metric_name: str):
         fig = plt.figure()
         legend = []
-
-        metrics: Metrics = getattr(self.agent_metrics[agent_number], metric_name)
-        avgs: Metrics = metrics.get_mov_avgs(self.metrics_number_of_elements, self.metrics_number_of_iterations)
-        for noise in avgs.get_unique_sorted_noises():
-            local_avgs = avgs.get_by_noise(noise)
-            color = self.__get_color_by_noise(noise)
-            plt.plot(local_avgs.get_metric_property("iteration"), local_avgs.get_metric_property("value"), color=color)
-            legend.append(f"Noise = {noise:.2f}")
-            
-        fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) for Agent {agent_number}")
-        plt.ylabel(f"Moving avg over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
-        plt.xlabel(f"Iterations")
-        plt.legend(legend, loc='upper left')
-
-    def __plot_agent_metric_test(self, agent_number: int, metric_name: str):
-        fig = plt.figure()
-        legend = []
         
         metrics: Metrics = getattr(self.agent_metrics[agent_number], metric_name)
         avgs: Metrics = metrics.get_mov_avgs(self.metrics_number_of_elements, self.metrics_number_of_iterations)
-        iterations = np.array(avgs.get_metric_property("iteration"))
-        values = np.array(avgs.get_metric_property("value"))
-        noises = np.array(avgs.get_metric_property("noise"))
-        for noise in avgs.get_unique_sorted_noises():
+
+        avgs_with_noise_dups = avgs.fill_noise_duplicates()
+        iterations = np.array(avgs_with_noise_dups.get_metric_property("iteration"))
+        values = np.array(avgs_with_noise_dups.get_metric_property("value"))
+        noises = np.array(avgs_with_noise_dups.get_metric_property("noise"))
+        for noise in avgs_with_noise_dups.get_unique_sorted_noises():
             color = self.__get_color_by_noise(noise)
             y = np.ma.masked_where(noises != noise, values)
             plt.plot(iterations, y, color=color)
             legend.append(f"Noise = {noise:.2f}")
             
-        fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) for Agent {agent_number}. TEST")
+        fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) for Agent {agent_number}")
         plt.ylabel(f"Moving avg over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
         plt.xlabel(f"Iterations")
         plt.legend(legend, loc='upper left')
