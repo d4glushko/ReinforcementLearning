@@ -72,7 +72,7 @@ class ResultsManager:
 
     def save_results(self, agents_results: typing.List[AgentResults]):
         ts = time.time()
-        now = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')
+        now = datetime.datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')
         target_path = os.path.join(*self.results_path, now)
         if not os.path.exists(target_path):
             os.makedirs(target_path)
