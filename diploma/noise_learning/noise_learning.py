@@ -40,6 +40,8 @@ class NoiseLearning:
         self.__setup_agents_results()
 
     def train(self):
+        running_scores = [10] * self.agents_number
+
         for i in range(1, self.training_episodes + 1):
             current_execution_percent = i / self.training_episodes * 100
             total_percent = (current_execution_percent + 100 * (self.current_execution - 1)) / self.total_executions
@@ -52,7 +54,7 @@ class NoiseLearning:
                 env = self.environments[j]
                 agent_results = self.agents_results[j]
 
-                self.__train_agent_episode(agent, env, agent_results, i, j)
+                self.__train_agent_episode(agent, env, agent_results, i, j, running_scores)
 
             self.__perform_random_swap(i)
 
@@ -121,8 +123,7 @@ class NoiseLearning:
         ]
 
     def __train_agent_episode(
-        self, agent: BaseAgent, env: EnvironmentWrapper, agent_results: AgentResults, iteration: int, agent_number: int
-    ):
+        self, agent: BaseAgent, env: EnvironmentWrapper, agent_results: AgentResults, iteration: int, agent_number: int, running_scores):
         state = env.reset()
 
         # TODO: code is bound to the CartPole env currently. Make it more env agnostic
@@ -139,14 +140,17 @@ class NoiseLearning:
                 state_next = None
             
             agent.remember(state, action, reward, done, state_next)
-            agent.reflect()
+            # agent.reflect()
             agent_results.add_loss(agent.last_loss, iteration, env.noise_std_dev)
 
             if done:
                 break
 
             state = state_next
+        agent.reflect()
         agent_results.add_score(score, iteration, env.noise_std_dev)
+        running_scores[agent_number] = 0.05 * score + (1 - 0.05) * running_scores[agent_number]
+
         print(f"Agent {agent_number} finished. Score {score}")
 
     def __select_device(self, agent_number, use_cuda):
