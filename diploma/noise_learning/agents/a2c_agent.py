@@ -19,9 +19,9 @@ LR = 1e-3
 # OpenAI baselines uses nstep of 5.
 N_STEPS = 20
 
-eps = 1.19209e-07
+EPS = 1.19209e-07
 
-HIDDEN_LAYERS_SIZES = [64, 128, 64]  # NN hidden layer size
+HIDDEN_LAYERS_SIZES = [64, 128]  # NN hidden layer size
 
 
 class A2CAgentHyperParams(AgentHyperParams):
@@ -31,6 +31,7 @@ class A2CAgentHyperParams(AgentHyperParams):
         self.gamma: float = GAMMA
         self.steps_number: int = N_STEPS
         self.hidden_layers_sizes: typing.List[int] = HIDDEN_LAYERS_SIZES
+        self.eps = EPS
 
 
 class MemoryCell:
@@ -47,11 +48,9 @@ class A2CAgent(BaseAgent):
 
     def __init__(self, observation_space: int, action_space: int, device, debug: bool):
         super().__init__(observation_space, action_space, device, debug)
-        self.gamma: float = GAMMA
-        self.n_steps: int = N_STEPS
         self.memory: typing.List[MemoryCell] = []
-        self.model = A2CCartPoleNN(observation_space, action_space).to(self.device)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=LR)
+        self.model = A2CCartPoleNN(observation_space, action_space, self.agent_hyper_params.hidden_layers_sizes).to(self.device)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.agent_hyper_params.learning_rate)
         
 
     def act(self, state):
@@ -73,7 +72,7 @@ class A2CAgent(BaseAgent):
 
     
     def reflect(self):
-        # if len(self.memory) < self.n_steps:
+        # if len(self.memory) < self.agent_hyper_params.steps_number:
         #     return
 
         super().reflect()
@@ -119,7 +118,7 @@ class A2CAgent(BaseAgent):
         for r in range(1, len(memory_copy)):
             this_return: float = 0
             if not memory_copy[r].done:
-                this_return = memory_copy[r].reward + next_return * self.gamma
+                this_return = memory_copy[r].reward + next_return * self.agent_hyper_params.gamma
 
             state_values.append(this_return)
             next_return = this_return
@@ -127,24 +126,24 @@ class A2CAgent(BaseAgent):
         state_values.reverse()
 
         result = torch.FloatTensor(state_values, device=self.device)
-        result = (result - result.mean()) / (result.std() + eps)
+        result = (result - result.mean()) / (result.std() + self.agent_hyper_params.eps)
         result = Variable(result).unsqueeze(1)
 
         return result
 
 
 class A2CCartPoleNN(nn.Module):
-    def __init__(self, observation_space: int, action_space: int):
+    def __init__(self, observation_space: int, action_space: int, hidden_layers_sizes: typing.List[int]):
         super(A2CCartPoleNN, self).__init__()
         self.action_space: int = action_space
         self.observation_space: int = observation_space
 
-        self.linear1 = nn.Linear(observation_space, 64)
-        self.linear2 = nn.Linear(64, 128)
-        # self.linear3 = nn.Linear(128, 64)
+        self.linear1 = nn.Linear(observation_space, hidden_layers_sizes[0])
+        self.linear2 = nn.Linear(hidden_layers_sizes[0], hidden_layers_sizes[1])
+        # self.linear3 = nn.Linear(hidden_layers_sizes[1], hidden_layers_sizes[2])
 
-        self.actor = nn.Linear(128, action_space)
-        self.critic = nn.Linear(128, 1)
+        self.actor = nn.Linear(hidden_layers_sizes[1], action_space)
+        self.critic = nn.Linear(hidden_layers_sizes[1], 1)
 
     def forward(self, x):
         # print(f"Before lin1: {x}")
