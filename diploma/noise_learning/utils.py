@@ -11,6 +11,12 @@ class NoiseLearningAgents(Enum):
     DQN = 1
     A2C = 2
 
+
+class ExchangeTypes(Enum):
+    NO = 1
+    RANDOM = 2
+    SMART = 3
+
    
 def choose_agent(noise_learning_agent: NoiseLearningAgents) -> typing.Type[BaseAgent]:
     agents_mapping = {

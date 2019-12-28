@@ -11,14 +11,14 @@ from .agents.base_agent import AgentHyperParams
 
 class Settings(DictSerializable):
     def __init__(
-        self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, enable_exchange: bool, 
+        self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, exchange_type: str, 
         agent_hyper_params: dict
     ):
         self.agents_number: int = agents_number
         self.env_name: str = env_name
         self.noise_learning_agent: str = noise_learning_agent
         self.noise_env_step: float = noise_env_step
-        self.enable_exchange: bool = enable_exchange
+        self.exchange_type: str = exchange_type
         self.agent_hyper_params: dict = agent_hyper_params
 
     def is_same_settings(self, settings: 'Settings'):
@@ -26,7 +26,7 @@ class Settings(DictSerializable):
                 self.env_name == settings.env_name and \
                 self.noise_learning_agent == settings.noise_learning_agent and \
                 self.noise_env_step == settings.noise_env_step and \
-                self.enable_exchange == settings.enable_exchange and \
+                self.exchange_type == settings.exchange_type and \
                 self.agent_hyper_params == settings.agent_hyper_params
 
 

@@ -8,21 +8,21 @@ import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
 from enum import Enum
 
-from .utils import NoiseLearningAgents, choose_agent
+from .utils import NoiseLearningAgents, ExchangeTypes, choose_agent
 from .metrics_manager import AgentMetrics, Metrics
 from .results_manager import ResultsManager, Settings
     
 
 class Visualizer:
     def __init__(
-        self, enable_exchange: bool, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
+        self, exchange_type: ExchangeTypes, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
         metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, executions_count: int, executions_from: int
     ):
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
         self.noise_env_step: float = noise_env_step
         self.env_name: str = env_name
-        self.enable_exchange: bool = enable_exchange
+        self.exchange_type: ExchangeTypes = exchange_type
 
         self.metrics_number_of_elements: int = metrics_number_of_elements
         self.metrics_number_of_iterations: int = metrics_number_of_iterations
@@ -45,7 +45,7 @@ class Visualizer:
         agent_hyper_params = choose_agent(self.noise_learning_agent).agent_hyper_params.to_dict()
         self.results_manager: ResultsManager = ResultsManager(
             Settings(
-                self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.enable_exchange, 
+                self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.exchange_type.name, 
                 agent_hyper_params
             )
         )

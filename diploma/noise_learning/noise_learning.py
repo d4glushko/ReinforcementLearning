@@ -3,12 +3,13 @@ import numpy as np
 import random
 import matplotlib
 import torch
+import math
 matplotlib.use("TKAgg")
 import matplotlib.pyplot as plt
 from matplotlib.cm import get_cmap
 from enum import Enum
 
-from .utils import NoiseLearningAgents, choose_agent
+from .utils import NoiseLearningAgents, ExchangeTypes, choose_agent
 from .agents.base_agent import BaseAgent
 from .agents.a2c_agent import A2CAgent
 from .agents.dqn_agent import DqnAgent
@@ -18,12 +19,15 @@ from .results_manager import ResultsManager, Settings, AgentResults
 
 class NoiseLearning:
     def __init__(
-        self, enable_exchange: bool, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
+        self, exchange_type: ExchangeTypes, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
         debug: bool, noise_env_step: float, use_cuda: bool, warm_up_steps: int, exchange_steps: int, current_execution: int = 1, total_executions: int = 1
     ):
+        if exchange_type != ExchangeTypes.NO and agents_number < 2:
+            raise Exception(f"Agents number must be >= 2 for {exchange_type.name} exchange_type. Current value: {agents_number}")
+
         self.warm_up_steps: int = warm_up_steps
         self.exchange_steps: int = exchange_steps
-        self.enable_exchange: bool = enable_exchange
+        self.exchange_type: ExchangeTypes = exchange_type
         self.training_episodes: int = training_episodes
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
@@ -56,17 +60,28 @@ class NoiseLearning:
 
                 self.__train_agent_episode(agent, env, agent_results, i, j, running_scores)
 
-            self.__perform_random_swap(i)
+            self.__perform_exchange(i)
 
     def save_results(self):
         self.results_manager.save_results(self.agents_results)
 
-    def __perform_random_swap(self, iter: int):
-        if not self.__should_swap_agents(iter):
+    def __perform_exchange(self, iter: int):
+        if not (iter % self.exchange_steps == 0 and iter >= self.warm_up_steps):
+            return
+
+        if self.exchange_type == ExchangeTypes.NO:
+            return
+        elif self.exchange_type == ExchangeTypes.RANDOM:
+            self.__perform_random_exchange()
+        elif self.exchange_type == ExchangeTypes.SMART:
+            self.__perform_smart_exchange(iter)
+        return
+
+    def __perform_random_exchange(self):
+        if not self.__should_random_exchange():
             return
 
         agent_number = random.randrange(self.agents_number)
-        print(f"Chosen agent {agent_number}. Iter {iter}")
         if agent_number == 0:
             self.__swap_environments(agent_number, agent_number + 1)
         elif agent_number == self.agents_number - 1:
@@ -76,20 +91,36 @@ class NoiseLearning:
         else:
             self.__swap_environments(agent_number - 1, agent_number)
 
-    def __should_swap_agents(self, iter: int):
-        if not self.enable_exchange or self.agents_number == 1:
-            return False
-
-        if not (iter % self.exchange_steps == 0 and iter >= self.warm_up_steps):
-            return False
-
+    def __should_random_exchange(self):
         # Idea is to swap each agent once per every 100 iterations (for CartPole DQN) on average. 
         iterations_count = 100 / self.exchange_steps
         chance = (1 / iterations_count) * (self.agents_number / 2) # because 2 agents are participating in swap
         return random.random() < chance
 
+    def __perform_smart_exchange(self, iter: int):
+        direction = int(iter / self.exchange_steps) % 2 == 0
+        if direction:
+            for i in range(self.agents_number - 1):
+                self.__smart_exchange_agents(i, i + 1)
+        else:
+            for i in range(self.agents_number - 1, 0, -1):
+                self.__smart_exchange_agents(i - 1, i)
+
+    def __smart_exchange_agents(self, idx: int, next_idx: int):
+        # TODO: tune and finish
+        delta = 0.1
+        noise = self.environments[idx].noise_std_dev
+        next_noise = self.environments[next_idx].noise_std_dev
+        cumulative_reward = np.array([metric.value for metric in self.agents_results[idx].scores.metrics][-30:]).mean()
+        next_cumulative_reward = np.array([metric.value for metric in self.agents_results[next_idx].scores.metrics][-30:]).mean()
+        formula = math.exp(
+            -delta * (noise - next_noise) * (next_cumulative_reward - cumulative_reward)
+        )
+        chance = min(formula, 1)
+        if random.random() < chance:
+            self.__swap_environments(idx, next_idx)
+
     def __swap_environments(self, idx1, idx2):
-        print(f"Swapping envs {idx1} {idx2}")
         env_buf = self.environments[idx1]
         self.environments[idx1] = self.environments[idx2]
         self.environments[idx2] = env_buf
@@ -114,7 +145,7 @@ class NoiseLearning:
         agent_hyper_params = choose_agent(self.noise_learning_agent).agent_hyper_params.to_dict()
         self.results_manager: ResultsManager = ResultsManager(
             Settings(
-                self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.enable_exchange, 
+                self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.exchange_type.name, 
                 agent_hyper_params
             )
         )
