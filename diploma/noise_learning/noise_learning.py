@@ -140,14 +140,13 @@ class NoiseLearning:
                 state_next = None
             
             agent.remember(state, action, reward, done, state_next)
-            # agent.reflect()
-            agent_results.add_loss(agent.last_loss, iteration, env.noise_std_dev)
+            loss = agent.reflect(done)
+            agent_results.add_loss(loss, iteration, env.noise_std_dev)
 
             if done:
                 break
 
             state = state_next
-        agent.reflect()
         agent_results.add_score(score, iteration, env.noise_std_dev)
         running_scores[agent_number] = 0.05 * score + (1 - 0.05) * running_scores[agent_number]
 

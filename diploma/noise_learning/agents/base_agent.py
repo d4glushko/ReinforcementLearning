@@ -13,7 +13,6 @@ class BaseAgent():
         self.action_space: int = action_space
         self.device = device
         self._debug: bool = debug
-        self.last_loss: typing.Optional[float] = None
 
         params = {
             'observation_space': self.observation_space,
@@ -38,9 +37,10 @@ class BaseAgent():
             }
             self._debug_log(f"Remember Started. To remember: {to_remember}")
     
-    def reflect(self):
+    def reflect(self, done) -> typing.Optional[float]:
         if self._debug:
             self._debug_log(f"Reflect Started.")
+        return None
 
     def _debug_log(self, message):
         print(f"DEBUG. {self.__class__.__name__}. {message}")

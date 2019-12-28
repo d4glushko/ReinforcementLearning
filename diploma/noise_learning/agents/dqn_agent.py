@@ -124,11 +124,11 @@ class DqnAgent(BaseAgent):
             # found, so we pick action with the larger expected reward.
             return self.model(torch.tensor([state], dtype=torch.float).to(self.device, non_blocking=True)).max(1)[1].item()
 
-    def reflect(self):
+    def reflect(self, done) -> typing.Optional[float]:
         if len(self.memory) < self.agent_hyper_params.batch_size:
-            return
+            return None
 
-        super().reflect()
+        super().reflect(done)
 
         loss = self.__get_loss(self.memory.sample(self.agent_hyper_params.batch_size))
         # Optimize the model
@@ -138,7 +138,7 @@ class DqnAgent(BaseAgent):
 
         self.exploration_rate *= self.agent_hyper_params.exploration_decay
         self.exploration_rate = max(self.agent_hyper_params.exploration_min, self.exploration_rate)
-        self.last_loss = loss.item()
+        return loss.item()
 
     def __get_loss(self, transitions: typing.List[Transition]):
         # Transpose the batch (see https://stackoverflow.com/a/19343/3343043 for

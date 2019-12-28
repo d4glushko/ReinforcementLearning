@@ -17,7 +17,7 @@ GAMMA = .99
 LR = 1e-3
 
 # OpenAI baselines uses nstep of 5.
-N_STEPS = 20
+N_STEPS = 300
 
 EPS = 1.19209e-07
 
@@ -71,11 +71,14 @@ class A2CAgent(BaseAgent):
         self.memory.append(MemoryCell(state, action, reward, done))
 
     
-    def reflect(self):
+    def reflect(self, done) -> typing.Optional[float]:
         # if len(self.memory) < self.agent_hyper_params.steps_number:
-        #     return
+        #     return None
 
-        super().reflect()
+        if not done:
+            return None
+
+        super().reflect(done)
         # Ground truth labels
         state_values_true = self.__calc_actual_state_values()
 
@@ -100,7 +103,7 @@ class A2CAgent(BaseAgent):
         self.optimizer.step()
 
         self.memory.clear()
-        self.last_loss = total_loss.item()
+        return total_loss.item()
 
 
     def __calc_actual_state_values(self):
