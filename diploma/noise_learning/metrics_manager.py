@@ -98,3 +98,4 @@ class AgentMetrics:
     def __init__(self):
         self.scores: Metrics = Metrics()
         self.losses: Metrics = Metrics()
+        self.distances: Metrics = Metrics()

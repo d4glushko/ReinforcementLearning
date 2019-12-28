@@ -60,6 +60,7 @@ class Visualizer:
                 agent_result = agent_results[i][j]
                 self.agent_metrics[j].losses.extend(agent_result.losses)
                 self.agent_metrics[j].scores.extend(agent_result.scores)
+                self.agent_metrics[j].distances.extend(agent_result.distances)
 
         self.results_number = len(agent_results)
                 
@@ -85,11 +86,13 @@ class Visualizer:
     def __plot_by_noise(self):
         self.__plot_metrics_by_noise("scores")
         self.__plot_metrics_by_noise("losses")
+        self.__plot_metrics_by_noise("distances")
 
     def __plot_by_agent(self):
         for i in range(self.agents_number):
             self.__plot_agent_metric(i, "scores")
             self.__plot_agent_metric(i, "losses")
+            self.__plot_agent_metric(i, "distances")
 
     def __plot_metrics_by_noise(self, metric_name: str):
         fig = plt.figure()
