@@ -1,4 +1,5 @@
 import typing
+import torch
 
 from ..common.serializable import DictSerializable
 
@@ -37,13 +38,17 @@ class BaseAgent():
             }
             self._debug_log(f"Remember Started. To remember: {to_remember}")
     
-    def reflect(self, done) -> typing.Optional[float]:
+    def reflect(self, done) -> typing.Tuple[typing.Optional[float], typing.Optional[float]]:
         if self._debug:
             self._debug_log(f"Reflect Started.")
-        return None
+        return None, None
 
     def _debug_log(self, message):
         print(f"DEBUG. {self.__class__.__name__}. {message}")
 
     def _info_log(self, message):
         print(f"INFO. {self.__class__.__name__}. {message}")
+
+    @staticmethod
+    def calc_dist(t1: torch.Tensor, t2: torch.Tensor) -> float:
+        return torch.dist(t1, t2, p=2).item()

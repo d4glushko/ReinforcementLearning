@@ -34,6 +34,7 @@ class AgentResults(DictSerializable):
     def __init__(self):
         self.scores: Metrics = Metrics()
         self.losses: Metrics = Metrics()
+        self.distances: Metrics = Metrics
 
     def add_score(self, score: float, iteration: int, noise: float):
         self.scores.append(Metric(score, iteration, noise))
@@ -42,15 +43,21 @@ class AgentResults(DictSerializable):
         if loss != None:
             self.losses.append(Metric(loss, iteration, noise))
 
+    def add_dist(self, dist: typing.Optional[float], iteration: int, noise: float):
+        if dist != None:
+            self.distances.append(Metric(dist, iteration, noise))
+
     def reduce_results(self):
         self.scores = self.scores.get_reduced_metrics()
         self.losses = self.losses.get_reduced_metrics()
+        self.distances = self.distances.get_reduced_metrics()
 
     def to_dict(self) -> dict:
         self.reduce_results()
         res = super().to_dict()
         res["scores"] = res.get("scores").to_dict()
         res["losses"] = res.get("losses").to_dict()
+        res["distances"] = res.get("distances").to_dict()
         return res
 
     @staticmethod
@@ -58,6 +65,7 @@ class AgentResults(DictSerializable):
         agent_results = AgentResults()
         agent_results.scores = Metrics.from_dict(results.get('scores'))
         agent_results.losses = Metrics.from_dict(results.get('losses'))
+        agent_results.distances = Metrics.from_dict(results.get('distances'))
         return agent_results
 
 

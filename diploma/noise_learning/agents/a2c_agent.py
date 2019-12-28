@@ -50,6 +50,7 @@ class A2CAgent(BaseAgent):
         super().__init__(observation_space, action_space, device, debug)
         self.memory: typing.List[MemoryCell] = []
         self.model = A2CCartPoleNN(observation_space, action_space, self.agent_hyper_params.hidden_layers_sizes).to(self.device)
+        self.initial_weights: torch.Tensor = self.model.get_all_weights()
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.agent_hyper_params.learning_rate)
         
 
@@ -71,12 +72,12 @@ class A2CAgent(BaseAgent):
         self.memory.append(MemoryCell(state, action, reward, done))
 
     
-    def reflect(self, done) -> typing.Optional[float]:
+    def reflect(self, done) -> typing.Tuple[typing.Optional[float], typing.Optional[float]]:
         # if len(self.memory) < self.agent_hyper_params.steps_number:
-        #     return None
+        #     return None, None
 
         if not done:
-            return None
+            return None, None
 
         super().reflect(done)
         # Ground truth labels
@@ -103,7 +104,7 @@ class A2CAgent(BaseAgent):
         self.optimizer.step()
 
         self.memory.clear()
-        return total_loss.item()
+        return total_loss.item(), BaseAgent.calc_dist(self.initial_weights, self.model.get_all_weights())
 
 
     def __calc_actual_state_values(self):
@@ -187,5 +188,6 @@ class A2CCartPoleNN(nn.Module):
         x = self.critic(x)
         return x
 
-    
+    def get_all_weights(self) -> torch.Tensor:
+        return torch.cat([param.data.view(-1) for param in self.parameters()])
     

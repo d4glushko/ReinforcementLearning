@@ -80,6 +80,9 @@ class Network(nn.Module):
         x = self.l3(x)
         return x
 
+    def get_all_weights(self) -> torch.Tensor:
+        return torch.cat([param.data.view(-1) for param in self.parameters()])
+
 class DqnAgent(BaseAgent):
     agent_hyper_params = DqnAgentHyperParams()
 
@@ -89,6 +92,7 @@ class DqnAgent(BaseAgent):
         self.memory = ReplayMemory(self.agent_hyper_params.memory_size)
 
         self.model = Network(observation_space, action_space, self.agent_hyper_params.hidden_layers_sizes).to(self.device, non_blocking=True)
+        self.initial_weights: torch.Tensor = self.model.get_all_weights()
 
         # Add debug hooks
         # def printdata(self, input, output):
@@ -124,9 +128,9 @@ class DqnAgent(BaseAgent):
             # found, so we pick action with the larger expected reward.
             return self.model(torch.tensor([state], dtype=torch.float).to(self.device, non_blocking=True)).max(1)[1].item()
 
-    def reflect(self, done) -> typing.Optional[float]:
+    def reflect(self, done) -> typing.Tuple[typing.Optional[float], typing.Optional[float]]:
         if len(self.memory) < self.agent_hyper_params.batch_size:
-            return None
+            return None, None
 
         super().reflect(done)
 
@@ -138,7 +142,7 @@ class DqnAgent(BaseAgent):
 
         self.exploration_rate *= self.agent_hyper_params.exploration_decay
         self.exploration_rate = max(self.agent_hyper_params.exploration_min, self.exploration_rate)
-        return loss.item()
+        return loss.item(), BaseAgent.calc_dist(self.initial_weights, self.model.get_all_weights())
 
     def __get_loss(self, transitions: typing.List[Transition]):
         # Transpose the batch (see https://stackoverflow.com/a/19343/3343043 for
