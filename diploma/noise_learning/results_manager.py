@@ -97,19 +97,17 @@ class ResultsManager:
             if not f.is_dir():
                 continue
 
-            counter = counter + 1
-
-            if counter < executions_from:
-                continue
-
-            if executions_count and (counter >= executions_count + executions_from):
-                break
-
             result_dir = f.path
             settings_file_path = os.path.join(result_dir, self.settings_filename)
             agent_settings = Settings.from_dict(self.__get_dict(settings_file_path))
             if not self.settings.is_same_settings(agent_settings):
                 continue
+
+            counter = counter + 1
+            if counter < executions_from:
+                continue
+            if executions_count and (counter >= executions_count + executions_from):
+                break
             
             current_agents_results: typing.List[AgentResults] = []
             for i in range(self.settings.agents_number):
