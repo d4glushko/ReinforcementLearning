@@ -40,7 +40,7 @@ Run multiple train executions (pass parameter for train executions count. Defaul
 
 Or run in a background process:
 ```
-nohup ./train_multiple_runs.sh &
+nohup ./train_multiple_runs.sh > log.out &
 ```
 
 ## Show Results
