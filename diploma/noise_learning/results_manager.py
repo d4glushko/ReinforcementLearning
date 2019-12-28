@@ -34,7 +34,7 @@ class AgentResults(DictSerializable):
     def __init__(self):
         self.scores: Metrics = Metrics()
         self.losses: Metrics = Metrics()
-        self.distances: Metrics = Metrics
+        self.distances: Metrics = Metrics()
 
     def add_score(self, score: float, iteration: int, noise: float):
         self.scores.append(Metric(score, iteration, noise))
