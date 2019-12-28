@@ -37,7 +37,7 @@ class Visualizer:
         self.__setup_colors()
 
     def __setup_colors(self):
-        name = "Set3"
+        name = "Paired"
         cmap = get_cmap(name)
         self.colors = cmap.colors
 
