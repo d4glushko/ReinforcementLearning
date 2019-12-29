@@ -1,0 +1,1 @@
+{"agents_number": 10, "env_name": "CartPole-v1", "noise_learning_agent": "A2C", "noise_env_step": 0.1, "exchange_type": "NO", "agent_hyper_params": {"learning_rate": 0.001, "gamma": 0.99, "steps_number": 300, "hidden_layers_sizes": [64, 128], "eps": 1.19209e-07}}
