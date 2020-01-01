@@ -99,3 +99,5 @@ class AgentMetrics:
         self.scores: Metrics = Metrics()
         self.losses: Metrics = Metrics()
         self.distances: Metrics = Metrics()
+        self.exchange_attempts: int = 0
+        self.exchanges: int = 0

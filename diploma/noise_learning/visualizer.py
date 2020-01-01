@@ -15,15 +15,19 @@ from .results_manager import ResultsManager, Settings
 
 class Visualizer:
     def __init__(
-        self, exchange_type: ExchangeTypes, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
-        metrics_number_of_elements: int, metrics_number_of_iterations: int, noise_env_step: float, executions_count: int, executions_from: int
+        self, exchange_type: ExchangeTypes, exchange_delta: float, exchange_items_reward_count: int, agents_number: int, 
+        env_name: str, noise_learning_agent: NoiseLearningAgents, metrics_number_of_elements: int, metrics_number_of_iterations: int, 
+        detailed_agents_plots: bool, noise_env_step: float, executions_count: int, executions_from: int
     ):
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
         self.noise_env_step: float = noise_env_step
         self.env_name: str = env_name
         self.exchange_type: ExchangeTypes = exchange_type
+        self.exchange_delta: float = exchange_delta
+        self.exchange_items_reward_count: int = exchange_items_reward_count
 
+        self.detailed_agents_plots: bool = detailed_agents_plots
         self.metrics_number_of_elements: int = metrics_number_of_elements
         self.metrics_number_of_iterations: int = metrics_number_of_iterations
 
@@ -46,7 +50,7 @@ class Visualizer:
         self.results_manager: ResultsManager = ResultsManager(
             Settings(
                 self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.exchange_type.name, 
-                agent_hyper_params
+                self.exchange_delta, self.exchange_items_reward_count, agent_hyper_params
             )
         )
         self.agent_metrics: typing.List[AgentMetrics] = [
@@ -57,17 +61,29 @@ class Visualizer:
         agent_results = self.results_manager.get_results(self.executions_count, self.executions_from)
         for i in range(len(agent_results)):
             for j in range(self.agents_number):
+                agent_metrics = self.agent_metrics[j]
                 agent_result = agent_results[i][j]
-                self.agent_metrics[j].losses.extend(agent_result.losses)
-                self.agent_metrics[j].scores.extend(agent_result.scores)
-                self.agent_metrics[j].distances.extend(agent_result.distances)
+
+                agent_metrics.losses.extend(agent_result.losses)
+                agent_metrics.scores.extend(agent_result.scores)
+                agent_metrics.distances.extend(agent_result.distances)
+                agent_metrics.exchange_attempts = agent_metrics.exchange_attempts + agent_result.exchange_attempts
+                agent_metrics.exchanges = agent_metrics.exchanges + agent_result.exchanges
+
 
         self.results_number = len(agent_results)
                 
     def show_metrics(self):
         self.__plot_by_noise()
-        self.__plot_by_agent()
+
+        if self.detailed_agents_plots:
+            self.__plot_by_agent()
+
         self.__plot_agent_by_noise()
+
+        if self.exchange_type == ExchangeTypes.RANDOM or self.exchange_type == ExchangeTypes.SMART:
+            self.__plot_exchanges()
+            
         plt.show(block=False)
 
     def __get_all_metrics(self, metric_name: str) -> Metrics:
@@ -149,3 +165,26 @@ class Visualizer:
         plt.ylabel(f"Noise")
         plt.xlabel(f"Iterations")
         plt.legend(legend, loc='upper left')
+
+    def __plot_exchanges(self):
+        fig = plt.figure()
+        x_labels = []
+        y_pos = []
+        values = []
+        total_exchanges = 0
+        total_exchange_attempts = 0
+
+        for i in range(self.agents_number):
+            agent_metrics = self.agent_metrics[i]
+            x_labels.append(f"Agent {i}")
+            y_pos.append(i)
+            values.append(agent_metrics.exchanges / agent_metrics.exchange_attempts)
+            total_exchanges = total_exchanges + agent_metrics.exchanges
+            total_exchange_attempts = total_exchange_attempts + agent_metrics.exchange_attempts
+        
+        plt.bar(y_pos, values, align="center", alpha=0.5)
+        plt.xticks(y_pos, x_labels)
+            
+        fig.suptitle(f"Agents exchange rates. Total rate: {total_exchanges / total_exchange_attempts:.2f}, total attempts: {total_exchange_attempts}")
+        plt.ylabel(f"Exchanges / Attempts Rate")
+        plt.xlabel(f"Agents")
