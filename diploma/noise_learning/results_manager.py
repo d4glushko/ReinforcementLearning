@@ -78,8 +78,8 @@ class AgentResults(DictSerializable):
         agent_results.scores = Metrics.from_dict(results.get('scores'))
         agent_results.losses = Metrics.from_dict(results.get('losses'))
         agent_results.distances = Metrics.from_dict(results.get('distances'))
-        agent_results.exchange_attempts = results.get('exchange_attempts')
-        agent_results.exchanges = results.get('exchanges')
+        agent_results.exchange_attempts = results.get('exchange_attempts', 0)
+        agent_results.exchanges = results.get('exchanges', 0)
         return agent_results
 
 
