@@ -68,6 +68,10 @@ class NoiseLearning:
     def save_results(self):
         self.results_manager.save_results(self.agents_results)
 
+    def __increase_agents_exchange_attempts(self):
+        for agent_result in self.agents_results:
+            agent_result.exchange_attempts = agent_result.exchange_attempts + 1
+
     def __perform_exchange(self, iter: int):
         if not (iter % self.exchange_steps == 0 and iter >= self.warm_up_steps):
             return
@@ -75,8 +79,10 @@ class NoiseLearning:
         if self.exchange_type == ExchangeTypes.NO:
             return
         elif self.exchange_type == ExchangeTypes.RANDOM:
+            self.__increase_agents_exchange_attempts()
             self.__perform_random_exchange()
         elif self.exchange_type == ExchangeTypes.SMART:
+            self.__increase_agents_exchange_attempts()
             self.__perform_smart_exchange(iter)
         return
 
@@ -136,6 +142,9 @@ class NoiseLearning:
         self.environments[idx1] = self.environments[idx2]
         self.environments[idx2] = env_buf
 
+        self.agents_results[idx1].exchanges = self.agents_results[idx1].exchanges + 1
+        self.agents_results[idx2].exchanges = self.agents_results[idx2].exchanges + 1
+
     def __setup_envs(self):
         self.environments: typing.List[EnvironmentWrapper] = [
             EnvironmentWrapper(self.env_name, noise_std_dev=(i * self.noise_env_step)) for i in range(self.agents_number)
@@ -157,7 +166,7 @@ class NoiseLearning:
         self.results_manager: ResultsManager = ResultsManager(
             Settings(
                 self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.exchange_type.name, 
-                agent_hyper_params
+                self.exchange_delta, self.exchange_items_reward_count, agent_hyper_params
             )
         )
         self.agents_results: typing.List[AgentResults] = [

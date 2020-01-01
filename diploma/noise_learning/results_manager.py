@@ -7,27 +7,37 @@ import json
 from .metrics_manager import Metric, Metrics
 from .common.serializable import DictSerializable
 from .agents.base_agent import AgentHyperParams
+from .utils import ExchangeTypes
 
 
 class Settings(DictSerializable):
     def __init__(
         self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, exchange_type: str, 
-        agent_hyper_params: dict
+        exchange_delta: float, exchange_items_reward_count: int, agent_hyper_params: dict
     ):
         self.agents_number: int = agents_number
         self.env_name: str = env_name
         self.noise_learning_agent: str = noise_learning_agent
         self.noise_env_step: float = noise_env_step
         self.exchange_type: str = exchange_type
+        self.exchange_delta: float = exchange_delta
+        self.exchange_items_reward_count: int = exchange_items_reward_count
         self.agent_hyper_params: dict = agent_hyper_params
 
     def is_same_settings(self, settings: 'Settings'):
-        return self.agents_number == settings.agents_number and \
+        result = self.agents_number == settings.agents_number and \
                 self.env_name == settings.env_name and \
                 self.noise_learning_agent == settings.noise_learning_agent and \
                 self.noise_env_step == settings.noise_env_step and \
                 self.exchange_type == settings.exchange_type and \
                 self.agent_hyper_params == settings.agent_hyper_params
+
+        if self.exchange_type == ExchangeTypes.SMART.name:
+            result = result and \
+                self.exchange_delta == settings.exchange_delta and \
+                self.exchange_items_reward_count == settings.exchange_items_reward_count
+
+        return result
 
 
 class AgentResults(DictSerializable):
@@ -35,6 +45,8 @@ class AgentResults(DictSerializable):
         self.scores: Metrics = Metrics()
         self.losses: Metrics = Metrics()
         self.distances: Metrics = Metrics()
+        self.exchange_attempts: int = 0
+        self.exchanges: int = 0
 
     def add_score(self, score: float, iteration: int, noise: float):
         self.scores.append(Metric(score, iteration, noise))
@@ -66,6 +78,8 @@ class AgentResults(DictSerializable):
         agent_results.scores = Metrics.from_dict(results.get('scores'))
         agent_results.losses = Metrics.from_dict(results.get('losses'))
         agent_results.distances = Metrics.from_dict(results.get('distances'))
+        agent_results.exchange_attempts = results.get('exchange_attempts')
+        agent_results.exchanges = results.get('exchanges')
         return agent_results
 
 
