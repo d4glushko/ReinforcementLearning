@@ -114,7 +114,7 @@ class NoiseLearning:
         cumulative_reward = np.array([metric.value for metric in self.agents_results[idx].scores.metrics][-30:]).mean()
         next_cumulative_reward = np.array([metric.value for metric in self.agents_results[next_idx].scores.metrics][-30:]).mean()
         formula = math.exp(
-            -delta * (noise - next_noise) * (next_cumulative_reward - cumulative_reward)
+            delta * (next_noise - noise) * (next_cumulative_reward - cumulative_reward)
         )
         chance = min(formula, 1)
         if random.random() < chance:
