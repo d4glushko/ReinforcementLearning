@@ -19,12 +19,15 @@ from .results_manager import ResultsManager, Settings, AgentResults
 
 class NoiseLearning:
     def __init__(
-        self, exchange_type: ExchangeTypes, training_episodes: int, agents_number: int, env_name: str, noise_learning_agent: NoiseLearningAgents, 
-        debug: bool, noise_env_step: float, use_cuda: bool, warm_up_steps: int, exchange_steps: int, current_execution: int = 1, total_executions: int = 1
+        self, exchange_type: ExchangeTypes, exchange_delta: float, exchange_items_reward_count: int, training_episodes: int, agents_number: int, 
+        env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, noise_env_step: float, use_cuda: bool, warm_up_steps: int, 
+        exchange_steps: int, current_execution: int = 1, total_executions: int = 1
     ):
         if exchange_type != ExchangeTypes.NO and agents_number < 2:
             raise Exception(f"Agents number must be >= 2 for {exchange_type.name} exchange_type. Current value: {agents_number}")
 
+        self.exchange_delta: float = exchange_delta
+        self.exchange_items_reward_count: int = exchange_items_reward_count
         self.warm_up_steps: int = warm_up_steps
         self.exchange_steps: int = exchange_steps
         self.exchange_type: ExchangeTypes = exchange_type
@@ -107,14 +110,22 @@ class NoiseLearning:
                 self.__smart_exchange_agents(i - 1, i)
 
     def __smart_exchange_agents(self, idx: int, next_idx: int):
-        # TODO: tune and finish
-        delta = 0.1
         noise = self.environments[idx].noise_std_dev
         next_noise = self.environments[next_idx].noise_std_dev
-        cumulative_reward = np.array([metric.value for metric in self.agents_results[idx].scores.metrics][-30:]).mean()
-        next_cumulative_reward = np.array([metric.value for metric in self.agents_results[next_idx].scores.metrics][-30:]).mean()
+
+        cumulative_reward = np.array(
+            [
+                metric.value for metric in self.agents_results[idx].scores.metrics
+            ][-self.exchange_items_reward_count:]
+        ).mean()
+        next_cumulative_reward = np.array(
+            [
+                metric.value for metric in self.agents_results[next_idx].scores.metrics
+            ][-self.exchange_items_reward_count:]
+        ).mean()
+
         formula = math.exp(
-            delta * (next_noise - noise) * (next_cumulative_reward - cumulative_reward)
+            self.exchange_delta * (next_noise - noise) * (next_cumulative_reward - cumulative_reward)
         )
         chance = min(formula, 1)
         if random.random() < chance:
