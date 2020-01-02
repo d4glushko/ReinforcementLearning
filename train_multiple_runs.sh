@@ -4,6 +4,8 @@ EXECUTIONS_NUMBER=${1:-10}
 
 AGENTS_NUMBER=10
 ENV_NAME='CartPole-v1'
+
+# Available agents: DQN, A2C
 AGENT='A2C'
 NOISE_ENV_STEP=0.1
 

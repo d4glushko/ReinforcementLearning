@@ -21,16 +21,22 @@ Change arguments in `train_multiple_runs.sh` file. Default arguments:
 ```
 AGENTS_NUMBER=10
 ENV_NAME='CartPole-v1'
-AGENT='DQN'
+
+# Available agents: DQN, A2C
+AGENT='A2C'
 NOISE_ENV_STEP=0.1
-ENABLE_EXCHANGE=true
+
+# Available types: NO, RANDOM, SMART
+EXCHANGE_TYPE='SMART'
+EXCHANGE_DELTA=0.1
+EXCHANGE_ITEMS_REWARD_COUNT=30
 
 WARM_UP_STEPS=30
 EXCHANGE_STEPS=5
 
 DEBUG=false
-USE_CUDA=true
-TRAINING_EPISODES=1000
+USE_CUDA=false
+TRAINING_EPISODES=5000
 ```
 
 Run multiple train executions (pass parameter for train executions count. Default 10 will be used if no parameter passed):
@@ -54,10 +60,17 @@ Change arguments in `show_aggregated_results.sh` file to determine the execution
 ```
 AGENTS_NUMBER=10
 ENV_NAME='CartPole-v1'
-AGENT='DQN'
-NOISE_ENV_STEP=0.1
-ENABLE_EXCHANGE=true
 
+# Available agents: DQN, A2C
+AGENT='A2C'
+NOISE_ENV_STEP=0.1
+
+# Available types: NO, RANDOM, SMART
+EXCHANGE_TYPE='SMART'
+EXCHANGE_DELTA=0.1
+EXCHANGE_ITEMS_REWARD_COUNT=30
+
+DETAILED_AGENTS_PLOTS=false
 METRICS_NUMBER_OF_ELEMENTS=100
 METRICS_NUMBER_OF_ITERATIONS=50
 

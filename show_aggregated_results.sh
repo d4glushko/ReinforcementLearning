@@ -2,6 +2,8 @@
 
 AGENTS_NUMBER=10
 ENV_NAME='CartPole-v1'
+
+# Available agents: DQN, A2C
 AGENT='A2C'
 NOISE_ENV_STEP=0.1
 
