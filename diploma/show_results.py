@@ -2,7 +2,7 @@ import argparse
 import time
 import numbers
 
-from utils import str2bool, int_or_none
+from utils import str2bool, int_or_none, str_or_none
 from noise_learning.utils import NoiseLearningAgents, ExchangeTypes
 from noise_learning.visualizer import Visualizer
 
@@ -23,12 +23,13 @@ def main(arguments):
 
     executions_count = arguments.executions_count
     executions_from = arguments.executions_from
+    date = arguments.date
 
     visualizer = Visualizer(
         exchange_type=exchange_type, exchange_delta=exchange_delta, exchange_items_reward_count=exchange_items_reward_count, 
         agents_number=agents_number, env_name=env_name, noise_learning_agent=agent, metrics_number_of_elements=metrics_number_of_elements, 
         metrics_number_of_iterations=metrics_number_of_iterations, detailed_agents_plots=detailed_agents_plots, 
-        noise_env_step=noise_env_step, executions_count=executions_count, executions_from=executions_from
+        noise_env_step=noise_env_step, executions_count=executions_count, executions_from=executions_from, date=date
     )
 
     visualizer.set_metrics()
@@ -54,6 +55,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--executions_count', type=int_or_none)
     parser.add_argument('--executions_from', type=int_or_none)
+    parser.add_argument('--date', type=str_or_none)
 
     args = parser.parse_args()
     print(f"Called with args: {args}")

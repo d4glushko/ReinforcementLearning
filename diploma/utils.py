@@ -17,3 +17,8 @@ def int_or_none(v):
         return int(v)
     except ValueError as ex:
         raise argparse.ArgumentTypeError(f'Int value expected. Error occurred: {ex}')
+
+def str_or_none(v):
+    if isinstance(v, str) and v:
+        return v
+    return None
