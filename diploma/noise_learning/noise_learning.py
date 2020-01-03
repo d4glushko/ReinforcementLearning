@@ -21,7 +21,7 @@ class NoiseLearning:
     def __init__(
         self, exchange_type: ExchangeTypes, exchange_delta: float, exchange_items_reward_count: int, training_episodes: int, agents_number: int, 
         env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, noise_env_step: float, use_cuda: bool, warm_up_steps: int, 
-        exchange_steps: int, current_execution: int = 1, total_executions: int = 1
+        exchange_steps: int, date: int, current_execution: int = 1, total_executions: int = 1,
     ):
         if exchange_type != ExchangeTypes.NO and agents_number < 2:
             raise Exception(f"Agents number must be >= 2 for {exchange_type.name} exchange_type. Current value: {agents_number}")
@@ -39,6 +39,7 @@ class NoiseLearning:
         self.use_cuda: bool = use_cuda
         self.debug: bool = debug
 
+        self.date: int = date
         self.current_execution: int = current_execution
         self.total_executions: int = total_executions
 
@@ -167,7 +168,7 @@ class NoiseLearning:
             Settings(
                 self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.exchange_type.name, 
                 self.exchange_delta, self.exchange_items_reward_count, agent_hyper_params
-            )
+            ), self.date, self.current_execution
         )
         self.agents_results: typing.List[AgentResults] = [
             AgentResults() for i in range(self.agents_number)

@@ -89,13 +89,15 @@ class ResultsManager:
     settings_filename = "settings.txt"
     agent_filename = "agent{}.txt"
 
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, date: int, execution_number: int):
         self.settings: Settings = settings
+        self.date: int = date
+        self.execution_number: int = execution_number
 
     def save_results(self, agents_results: typing.List[AgentResults]):
-        ts = time.time()
-        now = datetime.datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d_%H:%M:%S')
-        target_path = os.path.join(*self.results_path, now)
+        now = datetime.datetime.utcfromtimestamp(self.date).strftime('%Y-%m-%d_%H:%M:%S')
+        target_dir = f"{now}_{self.settings.noise_learning_agent}_{self.settings.exchange_type}_{self.execution_number}"
+        target_path = os.path.join(*self.results_path, target_dir)
         if not os.path.exists(target_path):
             os.makedirs(target_path)
 

@@ -19,13 +19,14 @@ EXCHANGE_STEPS=5
 
 DEBUG=false
 USE_CUDA=false
-TRAINING_EPISODES=5000
+TRAINING_EPISODES=10
 
+DATE=$(date +%s)
 SECONDS=0
 
 for ((i=1; i <= $EXECUTIONS_NUMBER; i++))
 do
-    python3 diploma/main.py --current_execution=$i --total_executions=$EXECUTIONS_NUMBER --agents_number=$AGENTS_NUMBER --env_name=$ENV_NAME --agent=$AGENT --noise_env_step=$NOISE_ENV_STEP --debug=$DEBUG --use_cuda=$USE_CUDA --training_episodes=$TRAINING_EPISODES --exchange_type=$EXCHANGE_TYPE --warm_up_steps=$WARM_UP_STEPS --exchange_steps=$EXCHANGE_STEPS --exchange_delta=$EXCHANGE_DELTA --exchange_items_reward_count=$EXCHANGE_ITEMS_REWARD_COUNT
+    python3 diploma/main.py --date=$DATE --current_execution=$i --total_executions=$EXECUTIONS_NUMBER --agents_number=$AGENTS_NUMBER --env_name=$ENV_NAME --agent=$AGENT --noise_env_step=$NOISE_ENV_STEP --debug=$DEBUG --use_cuda=$USE_CUDA --training_episodes=$TRAINING_EPISODES --exchange_type=$EXCHANGE_TYPE --warm_up_steps=$WARM_UP_STEPS --exchange_steps=$EXCHANGE_STEPS --exchange_delta=$EXCHANGE_DELTA --exchange_items_reward_count=$EXCHANGE_ITEMS_REWARD_COUNT
 done
 
 DURATION=$SECONDS
