@@ -68,7 +68,7 @@ class NoiseLearning:
             self.__perform_exchange(i)
 
     def save_results(self):
-        self.results_manager.save_results(self.agents_results)
+        self.results_manager.save_results(self.agents_results, self.date, self.current_execution)
 
     def __increase_agents_exchange_attempts(self):
         for agent_result in self.agents_results:
@@ -172,7 +172,7 @@ class NoiseLearning:
             Settings(
                 self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.exchange_type.name, 
                 self.exchange_delta, self.exchange_items_reward_count, agent_hyper_params
-            ), self.date, self.current_execution
+            )
         )
         self.agents_results: typing.List[AgentResults] = [
             AgentResults() for i in range(self.agents_number)
