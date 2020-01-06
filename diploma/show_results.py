@@ -1,5 +1,5 @@
 import argparse
-import time
+import time, os
 import numbers
 
 from utils import str2bool, int_or_none
@@ -23,12 +23,16 @@ def main(arguments):
 
     executions_count = arguments.executions_count
     executions_from = arguments.executions_from
+    execution_date = arguments.execution_date
+    execution_number = arguments.execution_number
 
     visualizer = Visualizer(
-        exchange_type=exchange_type, exchange_delta=exchange_delta, exchange_items_reward_count=exchange_items_reward_count, 
-        agents_number=agents_number, env_name=env_name, noise_learning_agent=agent, metrics_number_of_elements=metrics_number_of_elements, 
-        metrics_number_of_iterations=metrics_number_of_iterations, detailed_agents_plots=detailed_agents_plots, 
-        noise_env_step=noise_env_step, executions_count=executions_count, executions_from=executions_from
+        exchange_type=exchange_type, exchange_delta=exchange_delta, exchange_items_reward_count=exchange_items_reward_count,
+        agents_number=agents_number, env_name=env_name, noise_learning_agent=agent, metrics_number_of_elements=metrics_number_of_elements,
+        metrics_number_of_iterations=metrics_number_of_iterations, detailed_agents_plots=detailed_agents_plots,
+        noise_env_step=noise_env_step
+        , executions_count=executions_count, executions_from=executions_from, execution_number=execution_number,
+        execution_date=execution_date
     )
 
     visualizer.set_metrics()
@@ -48,12 +52,15 @@ if __name__ == '__main__':
     parser.add_argument('--exchange_delta', type=float, default=0.1)
     parser.add_argument('--exchange_items_reward_count', type=int, default=30)
 
+
     parser.add_argument('--detailed_agents_plots', type=str2bool, default=False)
     parser.add_argument('--metrics_number_of_elements', type=int, default=100)
     parser.add_argument('--metrics_number_of_iterations', type=int, default=50)
 
     parser.add_argument('--executions_count', type=int_or_none)
     parser.add_argument('--executions_from', type=int_or_none)
+    parser.add_argument('--execution_date', type=str, default='')
+    parser.add_argument('--execution_number', type=str, default='')
 
     args = parser.parse_args()
     print(f"Called with args: {args}")

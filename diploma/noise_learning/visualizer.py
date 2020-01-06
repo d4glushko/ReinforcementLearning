@@ -17,7 +17,7 @@ class Visualizer:
     def __init__(
         self, exchange_type: ExchangeTypes, exchange_delta: float, exchange_items_reward_count: int, agents_number: int, 
         env_name: str, noise_learning_agent: NoiseLearningAgents, metrics_number_of_elements: int, metrics_number_of_iterations: int, 
-        detailed_agents_plots: bool, noise_env_step: float, executions_count: int, executions_from: int
+        detailed_agents_plots: bool, noise_env_step: float, executions_count: int, executions_from: int, execution_date:str, execution_number:str
     ):
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
@@ -33,6 +33,8 @@ class Visualizer:
 
         self.executions_count: int = executions_count
         self.executions_from: int = executions_from
+        self.execution_date: str = execution_date
+        self.execution_number: str = execution_number
 
         self.noise_colors: dict = {}
         self.results_number: int = 1
@@ -51,8 +53,8 @@ class Visualizer:
             Settings(
                 self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.exchange_type.name, 
                 self.exchange_delta, self.exchange_items_reward_count, agent_hyper_params
-            )
-        )
+            ),
+        self.execution_date, self.execution_number)
         self.agent_metrics: typing.List[AgentMetrics] = [
             AgentMetrics() for i in range(self.agents_number)
         ]
@@ -83,7 +85,7 @@ class Visualizer:
 
         if self.exchange_type == ExchangeTypes.RANDOM or self.exchange_type == ExchangeTypes.SMART:
             self.__plot_exchanges()
-            
+
         plt.show(block=False)
 
     def __get_all_metrics(self, metric_name: str) -> Metrics:

@@ -11,6 +11,7 @@ def main(arguments):
     env_name = arguments.env_name
     agent = NoiseLearningAgents[arguments.agent]
     noise_env_step = arguments.noise_env_step
+    epsilon_wrt_noise = arguments.epsilon_wrt_noise
 
     exchange_type = ExchangeTypes[arguments.exchange_type]
     exchange_delta = arguments.exchange_delta
@@ -29,8 +30,8 @@ def main(arguments):
 
     noise_learning = NoiseLearning(
         exchange_type=exchange_type, exchange_delta=exchange_delta, exchange_items_reward_count=exchange_items_reward_count, 
-        training_episodes=training_episodes, agents_number=agents_number, env_name=env_name, noise_learning_agent=agent, debug=debug, 
-        noise_env_step=noise_env_step, use_cuda=use_cuda, warm_up_steps=warm_up_steps, exchange_steps=exchange_steps, 
+        training_episodes=training_episodes, agents_number=agents_number, env_name=env_name, noise_learning_agent=agent, debug=debug,
+        noise_env_step=noise_env_step, epsilon_wrt_noise=epsilon_wrt_noise, use_cuda=use_cuda, warm_up_steps=warm_up_steps, exchange_steps=exchange_steps,
         date=date, current_execution=current_execution, total_executions=total_executions
     )
 
@@ -48,6 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--env_name', type=str, default='CartPole-v1')
     parser.add_argument('--agent', type=str, default='DQN')
     parser.add_argument('--noise_env_step', type=float, default=0.1)
+    parser.add_argument('--epsilon_wrt_noise', type=bool, default=False)
 
     parser.add_argument('--exchange_type', type=str, default='NO')
     parser.add_argument('--exchange_delta', type=float, default=0.1)

@@ -14,15 +14,15 @@ from .base_agent import BaseAgent, AgentHyperParams
 
 
 # hyper parameters
-EXPLORATION_MAX = 1.0
-EXPLORATION_MIN = 0.01
-EXPLORATION_DECAY = 0.995
-GAMMA = 0.9  # Q-learning discount factor
-LR = 0.001  # NN optimizer learning rate
-HIDDEN_LAYERS_SIZES = [24, 24]  # NN hidden layer size
-BATCH_SIZE = 128  # Q-learning batch size
+EXPLORATION_MAX = 0.02
+EXPLORATION_MIN = 0.02
+EXPLORATION_DECAY = 0.9996
+GAMMA = 1.0  # Q-learning discount factor
+LR = 1e-3 # NN optimizer learning rate
+HIDDEN_LAYERS_SIZES = [256]  # NN hidden layer size
+BATCH_SIZE = 32  # Q-learning batch size
 
-MEMORY_SIZE = 300000
+MEMORY_SIZE = 50000
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
@@ -58,12 +58,13 @@ class ReplayMemory:
     def __len__(self):
         return len(self.memory)
 
+
 class Network(nn.Module):
     def __init__(self, observation_space: int, action_space: int, hidden_layers_sizes: typing.List[int]):
         super(Network, self).__init__()
         self.l1 = nn.Linear(observation_space, hidden_layers_sizes[0])
-        self.l2 = nn.Linear(hidden_layers_sizes[0], hidden_layers_sizes[1])
-        self.l3 = nn.Linear(hidden_layers_sizes[1], action_space)
+        # self.l2 = nn.Linear(hidden_layers_sizes[0], hidden_layers_sizes[1])
+        self.l3 = nn.Linear(hidden_layers_sizes[0], action_space)
 
         # Manual initialization of weights and biases
         # with torch.no_grad():
@@ -76,7 +77,7 @@ class Network(nn.Module):
 
     def forward(self, x):
         x = F.relu(self.l1(x))
-        x = F.relu(self.l2(x))
+        # x = F.relu(self.l2(x))
         x = self.l3(x)
         return x
 
@@ -142,6 +143,7 @@ class DqnAgent(BaseAgent):
 
         self.exploration_rate *= self.agent_hyper_params.exploration_decay
         self.exploration_rate = max(self.agent_hyper_params.exploration_min, self.exploration_rate)
+        # print(self.exploration_rate)
         return loss.item(), BaseAgent.calc_dist(self.initial_weights, self.model.get_all_weights())
 
     def __get_loss(self, transitions: typing.List[Transition]):

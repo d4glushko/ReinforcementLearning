@@ -20,7 +20,7 @@ from .results_manager import ResultsManager, Settings, AgentResults
 class NoiseLearning:
     def __init__(
         self, exchange_type: ExchangeTypes, exchange_delta: float, exchange_items_reward_count: int, training_episodes: int, agents_number: int, 
-        env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, noise_env_step: float, use_cuda: bool, warm_up_steps: int, 
+        env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, noise_env_step: float, epsilon_wrt_noise: bool, use_cuda: bool, warm_up_steps: int,
         exchange_steps: int, date: int, current_execution: int = 1, total_executions: int = 1,
     ):
         if exchange_type != ExchangeTypes.NO and agents_number < 2:
@@ -35,6 +35,7 @@ class NoiseLearning:
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
         self.noise_env_step: float = noise_env_step
+        self.epsilon_wrt_noise = epsilon_wrt_noise
         self.env_name: str = env_name
         self.use_cuda: bool = use_cuda
         self.debug: bool = debug
@@ -161,6 +162,9 @@ class NoiseLearning:
                 for i in range(self.agents_number)
             ]
         ]
+        if self.epsilon_wrt_noise:
+            for i, a in enumerate(self.agents):
+                a.exploration_rate = a.exploration_rate - i * self.noise_env_step
 
     def __setup_agents_results(self):
         agent_hyper_params = choose_agent(self.noise_learning_agent).agent_hyper_params.to_dict()
@@ -203,7 +207,7 @@ class NoiseLearning:
         agent_results.add_score(score, iteration, env.noise_std_dev)
         running_scores[agent_number] = 0.05 * score + (1 - 0.05) * running_scores[agent_number]
 
-        print(f"Agent {agent_number} finished. Score {score}")
+        print(f"Agent {agent_number} finished. Score {score}. Running score {running_scores[agent_number]}")
 
     def __select_device(self, agent_number, use_cuda):
         cuda_available = torch.cuda.is_available()
