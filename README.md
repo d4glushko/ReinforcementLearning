@@ -26,6 +26,9 @@ ENV_NAME='CartPole-v1'
 AGENT='A2C'
 NOISE_ENV_STEP=0.1
 
+# Whether to give smaller eps to envs with higher noise. Applicable only for DQN currently and only for initial state (doesn't take into account exchanges)
+EPS_WRT_NOISE=false
+
 # Available types: NO, RANDOM, SMART
 EXCHANGE_TYPE='SMART'
 EXCHANGE_DELTA=0.1
@@ -76,6 +79,7 @@ METRICS_NUMBER_OF_ITERATIONS=50
 
 # EXECUTIONS_COUNT=1
 # EXECUTIONS_FROM=0
+# EXECUTION_DATE='2020-01-03_10:22:52'
 ```
 
 Show results:

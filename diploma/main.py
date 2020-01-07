@@ -49,7 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--env_name', type=str, default='CartPole-v1')
     parser.add_argument('--agent', type=str, default='DQN')
     parser.add_argument('--noise_env_step', type=float, default=0.1)
-    parser.add_argument('--epsilon_wrt_noise', type=bool, default=False)
+    parser.add_argument('--epsilon_wrt_noise', type=str2bool, default=False)
 
     parser.add_argument('--exchange_type', type=str, default='NO')
     parser.add_argument('--exchange_delta', type=float, default=0.1)

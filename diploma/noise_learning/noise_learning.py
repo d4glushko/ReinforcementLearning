@@ -35,7 +35,7 @@ class NoiseLearning:
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
         self.noise_env_step: float = noise_env_step
-        self.epsilon_wrt_noise = epsilon_wrt_noise
+        self.epsilon_wrt_noise: bool = epsilon_wrt_noise
         self.env_name: str = env_name
         self.use_cuda: bool = use_cuda
         self.debug: bool = debug
@@ -163,8 +163,9 @@ class NoiseLearning:
             ]
         ]
         if self.epsilon_wrt_noise:
-            for i, a in enumerate(self.agents):
-                a.exploration_rate = a.exploration_rate - i * self.noise_env_step
+            for i, agent in enumerate(self.agents):
+                if hasattr(agent, 'exploration_rate'):
+                    agent.exploration_rate = agent.exploration_rate - i * self.noise_env_step
 
     def __setup_agents_results(self):
         agent_hyper_params = choose_agent(self.noise_learning_agent).agent_hyper_params.to_dict()
