@@ -120,7 +120,15 @@ class ResultsManager:
             agent_file_path = os.path.join(target_path, agent_filename.format(i))
             self.__save_dict(agent_file_path, agent_results.to_dict())
 
-    def get_results(self, execution_date: str = None, executions_count: int = None, executions_from: int = None) -> typing.List[typing.List[AgentResults]]:
+    def get_train_results(self, execution_date: str = None, executions_count: int = None, executions_from: int = None) -> typing.List[typing.List[AgentResults]]:
+        return self.__get_results(self.agent_filename, execution_date, executions_count, executions_from)
+
+    def get_play_results(self, execution_date: str = None, executions_count: int = None, executions_from: int = None) -> typing.List[typing.List[AgentResults]]:
+        return self.__get_results(self.play_agent_filename, execution_date, executions_count, executions_from)
+
+    def __get_results(
+        self, agent_filename: str, execution_date: str = None, executions_count: int = None, executions_from: int = None
+    ) -> typing.List[typing.List[AgentResults]]:
         if not executions_from:
             executions_from = 0
 
@@ -149,12 +157,13 @@ class ResultsManager:
             
             current_agents_results: typing.List[AgentResults] = []
             for i in range(self.settings.agents_number):
-                agent_file_path = os.path.join(result_dir, self.agent_filename.format(i))
+                agent_file_path = os.path.join(result_dir, agent_filename.format(i))
                 current_agents_results.append(AgentResults.from_dict(self.__get_dict(agent_file_path)))
             
             agents_results.append(current_agents_results)
             
         return agents_results
+
 
     def __get_dict(self, file_path: str) -> dict:
         with open(file_path) as json_file:

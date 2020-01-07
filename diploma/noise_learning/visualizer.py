@@ -10,7 +10,7 @@ from enum import Enum
 
 from .utils import NoiseLearningAgents, ExchangeTypes, choose_agent
 from .metrics_manager import AgentMetrics, Metrics
-from .results_manager import ResultsManager, Settings
+from .results_manager import ResultsManager, Settings, AgentResults
     
 
 class Visualizer:
@@ -58,11 +58,24 @@ class Visualizer:
             AgentMetrics() for i in range(self.agents_number)
         ]
 
-    def set_metrics(self):
-        agent_results = self.results_manager.get_results(self.execution_date, self.executions_count, self.executions_from)
+        self.agent_play_metrics: typing.List[AgentMetrics] = [
+            AgentMetrics() for i in range(self.agents_number)
+        ]
+
+    def set_train_metrics(self):
+        agent_results = self.results_manager.get_train_results(self.execution_date, self.executions_count, self.executions_from)
+        self.__set_metrics(agent_results, self.agent_metrics)
+
+        self.results_number = len(agent_results)
+
+    def set_play_metrics(self):
+        agent_results = self.results_manager.get_play_results(self.execution_date, self.executions_count, self.executions_from)
+        self.__set_metrics(agent_results, self.agent_play_metrics)
+
+    def __set_metrics(self, agent_results: typing.List[typing.List[AgentResults]], agents_metrics: typing.List[AgentMetrics]):
         for i in range(len(agent_results)):
             for j in range(self.agents_number):
-                agent_metrics = self.agent_metrics[j]
+                agent_metrics = agents_metrics[j]
                 agent_result = agent_results[i][j]
 
                 agent_metrics.losses.extend(agent_result.losses)
@@ -70,11 +83,8 @@ class Visualizer:
                 agent_metrics.distances.extend(agent_result.distances)
                 agent_metrics.exchange_attempts = agent_metrics.exchange_attempts + agent_result.exchange_attempts
                 agent_metrics.exchanges = agent_metrics.exchanges + agent_result.exchanges
-
-
-        self.results_number = len(agent_results)
                 
-    def show_metrics(self):
+    def show_train_metrics(self):
         self.__plot_by_noise()
 
         if self.detailed_agents_plots:
@@ -84,6 +94,11 @@ class Visualizer:
 
         if self.exchange_type == ExchangeTypes.RANDOM or self.exchange_type == ExchangeTypes.SMART:
             self.__plot_exchanges()
+            
+        plt.show(block=False)
+
+    def show_play_metrics(self):
+        self.__plot_play_agents()
             
         plt.show(block=False)
 
@@ -159,7 +174,8 @@ class Visualizer:
         for i in range(self.agents_number):
             metrics: Metrics = getattr(self.agent_metrics[i], metric_name)
             metrics = metrics.get_reduced_metrics()
-            plt.plot(metrics.get_metric_property("iteration"), metrics.get_metric_property("noise"))
+            color = self.colors[i]
+            plt.plot(metrics.get_metric_property("iteration"), metrics.get_metric_property("noise"), color=color)
             legend.append(f"Agent {i}")
             
         fig.suptitle(f"Agents pathes for {self.results_number} run(s)")
@@ -189,3 +205,18 @@ class Visualizer:
         fig.suptitle(f"Agents exchange rates. Total rate: {total_exchanges / total_exchange_attempts:.2f}, total attempts: {total_exchange_attempts}")
         plt.ylabel(f"Exchanges / Attempts Rate")
         plt.xlabel(f"Agents")
+
+    def __plot_play_agents(self):
+        fig = plt.figure()
+        legend = []
+
+        for idx, play_metrics in enumerate(self.agent_play_metrics):
+            scores_metrics = play_metrics.scores.get_reduced_metrics()
+            color = self.colors[idx]
+            plt.plot(scores_metrics.get_metric_property("iteration"), scores_metrics.get_metric_property("value"), color=color)
+            legend.append(f"Agent {idx}")
+            
+        fig.suptitle(f"Play Results. Averaged scores for {self.results_number} run(s) per Agent")
+        plt.ylabel(f"Scores")
+        plt.xlabel(f"Iterations")
+        plt.legend(legend, loc='upper left')

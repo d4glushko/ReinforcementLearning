@@ -32,8 +32,12 @@ def main(arguments):
         noise_env_step=noise_env_step, executions_count=executions_count, executions_from=executions_from, execution_date=execution_date
     )
 
-    visualizer.set_metrics()
-    visualizer.show_metrics()
+    visualizer.set_train_metrics()
+    visualizer.show_train_metrics()
+
+    if not arguments.ignore_play:
+        visualizer.set_play_metrics()
+        visualizer.show_play_metrics()
 
     input("Press <ENTER> to continue")
 
@@ -52,6 +56,8 @@ if __name__ == '__main__':
     parser.add_argument('--detailed_agents_plots', type=str2bool, default=False)
     parser.add_argument('--metrics_number_of_elements', type=int, default=100)
     parser.add_argument('--metrics_number_of_iterations', type=int, default=50)
+
+    parser.add_argument('--ignore_play', type=str2bool, default=False)
 
     parser.add_argument('--executions_count', type=int_or_none)
     parser.add_argument('--executions_from', type=int_or_none)
