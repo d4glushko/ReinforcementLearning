@@ -165,7 +165,7 @@ class NoiseLearning:
         if self.epsilon_wrt_noise:
             for i, agent in enumerate(self.agents):
                 if hasattr(agent, 'exploration_rate'):
-                    agent.exploration_rate = agent.exploration_rate - i * self.noise_env_step
+                    agent.exploration_rate = 1 - i * self.noise_env_step
 
     def __setup_agents_results(self):
         agent_hyper_params = choose_agent(self.noise_learning_agent).agent_hyper_params.to_dict()
