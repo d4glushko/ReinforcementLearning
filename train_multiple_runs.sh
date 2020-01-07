@@ -6,14 +6,14 @@ AGENTS_NUMBER=10
 ENV_NAME='CartPole-v1'
 
 # Available agents: DQN, A2C
-AGENT='DQN'
+AGENT='A2C'
 NOISE_ENV_STEP=0.1
 
 #whether to give smaller eps to envs with higher noise
 EPS_WRT_NOISE=false
 
 # Available types: NO, RANDOM, SMART
-EXCHANGE_TYPE='NO'
+EXCHANGE_TYPE='SMART'
 EXCHANGE_DELTA=0.1
 EXCHANGE_ITEMS_REWARD_COUNT=30
 
@@ -22,7 +22,7 @@ EXCHANGE_STEPS=5
 
 DEBUG=false
 USE_CUDA=false
-TRAINING_EPISODES=2000
+TRAINING_EPISODES=5000
 
 DATE=$(date +%s)
 SECONDS=0

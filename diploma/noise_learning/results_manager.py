@@ -85,18 +85,16 @@ class AgentResults(DictSerializable):
 
 
 class ResultsManager:
-    results_path = ["diploma", "temp_results", ""]
+    results_path = ["diploma", "temp_results"]
     settings_filename = "settings.txt"
     agent_filename = "agent{}.txt"
 
-    def __init__(self, settings: Settings, execution_date: str, execution_number: str):
+    def __init__(self, settings: Settings):
         self.settings: Settings = settings
-        self.execution_date: str = execution_date
-        self.execution_number: str = execution_number
 
-    def save_results(self, agents_results: typing.List[AgentResults]):
-        now = datetime.datetime.utcfromtimestamp(float(self.execution_date)).strftime('%Y-%m-%d_%H:%M:%S')
-        target_dir = f"{now}_{self.settings.noise_learning_agent}_{self.settings.exchange_type}_{self.execution_number}"
+    def save_results(self, agents_results: typing.List[AgentResults], execution_date: int, execution_number: int):
+        now = datetime.datetime.utcfromtimestamp(execution_date).strftime('%Y-%m-%d_%H:%M:%S')
+        target_dir = f"{now}_{self.settings.noise_learning_agent}_{self.settings.exchange_type}_{execution_number}"
         target_path = os.path.join(*self.results_path, target_dir)
         if not os.path.exists(target_path):
             os.makedirs(target_path)
@@ -109,7 +107,7 @@ class ResultsManager:
             agent_file_path = os.path.join(target_path, self.agent_filename.format(i))
             self.__save_dict(agent_file_path, agent_results.to_dict())
 
-    def get_results(self, executions_count: int = None, executions_from: int = None) -> typing.List[typing.List[AgentResults]]:
+    def get_results(self, execution_date: str = None, executions_count: int = None, executions_from: int = None) -> typing.List[typing.List[AgentResults]]:
         if not executions_from:
             executions_from = 0
 
@@ -122,19 +120,20 @@ class ResultsManager:
                 continue
 
             result_dir = f.path
+            if execution_date and not result_dir.split("/")[-1].startswith(execution_date):
+                continue
 
             settings_file_path = os.path.join(result_dir, self.settings_filename)
             agent_settings = Settings.from_dict(self.__get_dict(settings_file_path))
-
-            # if not self.settings.is_same_settings(agent_settings):
-            #     continue
+            if not self.settings.is_same_settings(agent_settings):
+                continue
 
             counter = counter + 1
             if counter < executions_from:
                 continue
             if executions_count and (counter >= executions_count + executions_from):
                 break
-            print(result_dir)
+            
             current_agents_results: typing.List[AgentResults] = []
             for i in range(self.settings.agents_number):
                 agent_file_path = os.path.join(result_dir, self.agent_filename.format(i))
