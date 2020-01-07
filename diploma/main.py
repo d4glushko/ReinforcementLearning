@@ -23,6 +23,7 @@ def main(arguments):
     debug = arguments.debug
     use_cuda = arguments.use_cuda
     training_episodes = arguments.training_episodes
+    play_episodes = arguments.play_episodes
 
     date = arguments.date
     current_execution = arguments.current_execution
@@ -30,17 +31,26 @@ def main(arguments):
 
     noise_learning = NoiseLearning(
         exchange_type=exchange_type, exchange_delta=exchange_delta, exchange_items_reward_count=exchange_items_reward_count, 
-        training_episodes=training_episodes, agents_number=agents_number, env_name=env_name, noise_learning_agent=agent, debug=debug,
-        noise_env_step=noise_env_step, epsilon_wrt_noise=epsilon_wrt_noise, use_cuda=use_cuda, warm_up_steps=warm_up_steps, exchange_steps=exchange_steps,
+        training_episodes=training_episodes, play_episodes=play_episodes, agents_number=agents_number, env_name=env_name, 
+        noise_learning_agent=agent, debug=debug, noise_env_step=noise_env_step, epsilon_wrt_noise=epsilon_wrt_noise, 
+        use_cuda=use_cuda, warm_up_steps=warm_up_steps, exchange_steps=exchange_steps,
         date=date, current_execution=current_execution, total_executions=total_executions
     )
 
     start = time.time()
     noise_learning.train()
     end = time.time()
-    print(f"Execution time: {(end - start) / 60} minutes")
+    print(f"Training time: {(end - start) / 60} minutes")
 
-    noise_learning.save_results()
+    noise_learning.save_train_results()
+
+    if not arguments.ignore_play:
+        start = time.time()
+        noise_learning.play()
+        end = time.time()
+        print(f"Play time: {(end - start) / 60} minutes")
+
+        noise_learning.save_play_results()
 
 
 if __name__ == '__main__':
@@ -60,7 +70,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--debug', type=str2bool, default=False)
     parser.add_argument('--use_cuda', type=str2bool, default=True)
-    parser.add_argument('--training_episodes', type=int, default=1000)
+    parser.add_argument('--training_episodes', type=int, default=5000)
+    parser.add_argument('--play_episodes', type=int, default=500)
+    parser.add_argument('--ignore_play', type=str2bool, default=False)
 
     parser.add_argument('--date', type=int, required=True)
     parser.add_argument('--current_execution', type=int, default=1)

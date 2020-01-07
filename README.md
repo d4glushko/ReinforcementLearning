@@ -40,6 +40,8 @@ EXCHANGE_STEPS=5
 DEBUG=false
 USE_CUDA=false
 TRAINING_EPISODES=5000
+PLAY_EPISODES=500
+IGNORE_PLAY=false
 ```
 
 Run multiple train executions (pass parameter for train executions count. Default 10 will be used if no parameter passed):

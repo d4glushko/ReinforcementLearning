@@ -88,23 +88,36 @@ class ResultsManager:
     results_path = ["diploma", "temp_results"]
     settings_filename = "settings.txt"
     agent_filename = "agent{}.txt"
+    play_agent_filename = "play_agent{}.txt"
 
     def __init__(self, settings: Settings):
         self.settings: Settings = settings
 
-    def save_results(self, agents_results: typing.List[AgentResults], execution_date: int, execution_number: int):
+    def save_train_results(self, agents_results: typing.List[AgentResults], execution_date: int, execution_number: int):
+        target_path = self.__get_save_folder(execution_date, execution_number)
+        self.__save_agent_results(agents_results, target_path, self.agent_filename)
+        self.__save_settings(target_path)
+
+    def save_play_results(self, agents_results: typing.List[AgentResults], execution_date: int, execution_number: int):
+        target_path = self.__get_save_folder(execution_date, execution_number)
+        self.__save_agent_results(agents_results, target_path, self.play_agent_filename)
+
+    def __get_save_folder(self, execution_date: int, execution_number: int) -> str:
         now = datetime.datetime.utcfromtimestamp(execution_date).strftime('%Y-%m-%d_%H:%M:%S')
         target_dir = f"{now}_{self.settings.noise_learning_agent}_{self.settings.exchange_type}_{execution_number}"
         target_path = os.path.join(*self.results_path, target_dir)
         if not os.path.exists(target_path):
             os.makedirs(target_path)
+        return target_path
 
+    def __save_settings(self, target_path: str):
         settings_file_path = os.path.join(target_path, self.settings_filename)
         self.__save_dict(settings_file_path, self.settings.to_dict())
 
+    def __save_agent_results(self, agents_results: typing.List[AgentResults], target_path: str, agent_filename: str):
         for i in range(self.settings.agents_number):
             agent_results = agents_results[i]
-            agent_file_path = os.path.join(target_path, self.agent_filename.format(i))
+            agent_file_path = os.path.join(target_path, agent_filename.format(i))
             self.__save_dict(agent_file_path, agent_results.to_dict())
 
     def get_results(self, execution_date: str = None, executions_count: int = None, executions_from: int = None) -> typing.List[typing.List[AgentResults]]:

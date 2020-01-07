@@ -19,7 +19,7 @@ from .results_manager import ResultsManager, Settings, AgentResults
 
 class NoiseLearning:
     def __init__(
-        self, exchange_type: ExchangeTypes, exchange_delta: float, exchange_items_reward_count: int, training_episodes: int, agents_number: int, 
+        self, exchange_type: ExchangeTypes, exchange_delta: float, exchange_items_reward_count: int, training_episodes: int, play_episodes: int, agents_number: int, 
         env_name: str, noise_learning_agent: NoiseLearningAgents, debug: bool, noise_env_step: float, epsilon_wrt_noise: bool, use_cuda: bool, warm_up_steps: int,
         exchange_steps: int, date: int, current_execution: int = 1, total_executions: int = 1,
     ):
@@ -32,6 +32,7 @@ class NoiseLearning:
         self.exchange_steps: int = exchange_steps
         self.exchange_type: ExchangeTypes = exchange_type
         self.training_episodes: int = training_episodes
+        self.play_episodes: int = play_episodes
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
         self.noise_env_step: float = noise_env_step
@@ -55,7 +56,7 @@ class NoiseLearning:
             current_execution_percent = i / self.training_episodes * 100
             total_percent = (current_execution_percent + 100 * (self.current_execution - 1)) / self.total_executions
             print(
-                f"Episode {i}. Execution {current_execution_percent:.2f}% done. "
+                f"Train Episode {i}. Execution {current_execution_percent:.2f}% done. "
                 f"{self.current_execution}/{self.total_executions} execution. Total {total_percent:.2f}% done."
             )
             for j in range(self.agents_number):
@@ -67,8 +68,26 @@ class NoiseLearning:
 
             self.__perform_exchange(i)
 
-    def save_results(self):
-        self.results_manager.save_results(self.agents_results, self.date, self.current_execution)
+    def play(self):
+        env = next((e for e in self.environments if not e.is_noise), None)
+        if env == None:
+            raise Exception("Environment without noise was not found!")
+        for i in range(1, self.play_episodes + 1):
+            current_execution_percent = i / self.play_episodes * 100
+            print(
+                f"Play Episode {i}. Execution {current_execution_percent:.2f}% done. "
+            )
+            for j in range(self.agents_number):
+                agent = self.agents[j]
+                agent_play_results = self.agents_play_results[j]
+
+                self.__play_agent_episode(agent, env, agent_play_results, i, j)
+
+    def save_train_results(self):
+        self.results_manager.save_train_results(self.agents_results, self.date, self.current_execution)
+
+    def save_play_results(self):
+        self.results_manager.save_play_results(self.agents_play_results, self.date, self.current_execution)
 
     def __increase_agents_exchange_attempts(self):
         for agent_result in self.agents_results:
@@ -178,6 +197,31 @@ class NoiseLearning:
         self.agents_results: typing.List[AgentResults] = [
             AgentResults() for i in range(self.agents_number)
         ]
+        
+        self.agents_play_results: typing.List[AgentResults] = [
+            AgentResults() for i in range(self.agents_number)
+        ]
+
+    def __play_agent_episode(
+        self, agent: BaseAgent, env: EnvironmentWrapper, agent_play_results: AgentResults, iteration: int, agent_number: int):
+        state = env.reset()
+
+        # TODO: code is bound to the CartPole env currently. Make it more env agnostic
+        score = 0
+        while True:
+            # env.render()
+            score += 1
+
+            action = agent.act(state)
+            state_next, reward, done, info = env.step(action)
+
+            if done:
+                break
+
+            state = state_next
+        agent_play_results.add_score(score, iteration, env.noise_std_dev)
+
+        print(f"Agent {agent_number} finished. Score {score}")
 
     def __train_agent_episode(
         self, agent: BaseAgent, env: EnvironmentWrapper, agent_results: AgentResults, iteration: int, agent_number: int, running_scores):
