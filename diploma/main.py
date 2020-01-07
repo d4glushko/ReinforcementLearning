@@ -37,20 +37,22 @@ def main(arguments):
         date=date, current_execution=current_execution, total_executions=total_executions
     )
 
-    start = time.time()
+    train_start = time.time()
     noise_learning.train()
-    end = time.time()
-    print(f"Training time: {(end - start) / 60} minutes")
+    train_end = time.time()
 
     noise_learning.save_train_results()
 
     if not arguments.ignore_play:
-        start = time.time()
+        play_start = time.time()
         noise_learning.play()
-        end = time.time()
-        print(f"Play time: {(end - start) / 60} minutes")
+        play_end = time.time()
 
         noise_learning.save_play_results()
+
+    print(f"Training time: {(train_end - train_start) / 60} minutes")
+    if not arguments.ignore_play:
+        print(f"Play time: {(play_end - play_start) / 60} minutes")
 
 
 if __name__ == '__main__':

@@ -1,1 +1,0 @@
-{"agents_number": 10, "env_name": "CartPole-v1", "noise_learning_agent": "DQN", "noise_env_step": 0.1, "exchange_type": "RANDOM", "agent_hyper_params": {"learning_rate": 0.001, "gamma": 0.9, "hidden_layers_sizes": [24, 24], "batch_size": 128, "memory_size": 300000, "exploration_max": 1.0, "exploration_min": 0.01, "exploration_decay": 0.995}}
