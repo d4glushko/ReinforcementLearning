@@ -159,6 +159,7 @@ class ResultsManager:
             for i in range(self.settings.agents_number):
                 agent_file_path = os.path.join(result_dir, agent_filename.format(i))
                 current_agents_results.append(AgentResults.from_dict(self.__get_dict(agent_file_path)))
+                print(f"Loaded {agent_file_path} results")
             
             agents_results.append(current_agents_results)
             

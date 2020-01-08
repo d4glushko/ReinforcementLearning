@@ -73,6 +73,7 @@ class Visualizer:
         self.__set_metrics(agent_results, self.agent_play_metrics)
 
     def __set_metrics(self, agent_results: typing.List[typing.List[AgentResults]], agents_metrics: typing.List[AgentMetrics]):
+        total = len(agent_results) * self.agents_number
         for i in range(len(agent_results)):
             for j in range(self.agents_number):
                 agent_metrics = agents_metrics[j]
@@ -83,6 +84,7 @@ class Visualizer:
                 agent_metrics.distances.extend(agent_result.distances)
                 agent_metrics.exchange_attempts = agent_metrics.exchange_attempts + agent_result.exchange_attempts
                 agent_metrics.exchanges = agent_metrics.exchanges + agent_result.exchanges
+                print(f"Metrics set for result {i}, agent {j}. {(i * self.agents_number + j) + 1}/{total}")
                 
     def show_train_metrics(self):
         self.__plot_by_noise()
@@ -144,6 +146,8 @@ class Visualizer:
         plt.xlabel(f"Iterations")
         plt.legend(legend, loc='upper left')
 
+        print(f"Plot Metric by Noise for metric {metric_name} is ready")
+
     def __plot_agent_metric(self, agent_number: int, metric_name: str):
         fig = plt.figure()
         legend = []
@@ -166,6 +170,8 @@ class Visualizer:
         plt.xlabel(f"Iterations")
         plt.legend(legend, loc='upper left')
 
+        print(f"Plot Agent Metric for agent {agent_number}, metric {metric_name} is ready. Total agents: {self.agents_number}")
+
     def __plot_agent_by_noise(self):
         fig = plt.figure()
         legend = []
@@ -182,6 +188,8 @@ class Visualizer:
         plt.ylabel(f"Noise")
         plt.xlabel(f"Iterations")
         plt.legend(legend, loc='upper left')
+
+        print(f"Plot Agent by Noise is ready")
 
     def __plot_exchanges(self):
         fig = plt.figure()
@@ -206,6 +214,8 @@ class Visualizer:
         plt.ylabel(f"Exchanges / Attempts Rate")
         plt.xlabel(f"Agents")
 
+        print(f"Plot Exchanges is ready")
+
     def __plot_play_agents(self):
         fig = plt.figure()
         legend = []
@@ -220,3 +230,5 @@ class Visualizer:
         plt.ylabel(f"Scores")
         plt.xlabel(f"Iterations")
         plt.legend(legend, loc='upper left')
+
+        print(f"Plot Play Agents is ready")
