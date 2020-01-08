@@ -142,8 +142,8 @@ class Visualizer:
             legend.append(f"Noise = {noise:.2f}")
             
         fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) per Noise")
-        plt.ylabel(f"Moving avg over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
-        plt.xlabel(f"Iterations")
+        plt.ylabel(f"Moving average over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
+        plt.xlabel(f"Iteration")
         plt.legend(legend, loc='upper left')
 
         print(f"Plot Metric by Noise for metric {metric_name} is ready")
@@ -166,8 +166,8 @@ class Visualizer:
             legend.append(f"Noise = {noise:.2f}")
             
         fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) for Agent {agent_number}")
-        plt.ylabel(f"Moving avg over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
-        plt.xlabel(f"Iterations")
+        plt.ylabel(f"Moving average over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
+        plt.xlabel(f"Iteration")
         plt.legend(legend, loc='upper left')
 
         print(f"Plot Agent Metric for agent {agent_number}, metric {metric_name} is ready. Total agents: {self.agents_number}")
@@ -184,9 +184,9 @@ class Visualizer:
             plt.plot(metrics.get_metric_property("iteration"), metrics.get_metric_property("noise"), color=color)
             legend.append(f"Agent {i}")
             
-        fig.suptitle(f"Agents pathes for {self.results_number} run(s)")
+        fig.suptitle(f"Agents paths for {self.results_number} run(s)")
         plt.ylabel(f"Noise")
-        plt.xlabel(f"Iterations")
+        plt.xlabel(f"Iteration")
         plt.legend(legend, loc='upper left')
 
         print(f"Plot Agent by Noise is ready")
@@ -227,8 +227,8 @@ class Visualizer:
             legend.append(f"Agent {idx}")
             
         fig.suptitle(f"Play Results. Averaged scores for {self.results_number} run(s) per Agent")
-        plt.ylabel(f"Scores")
-        plt.xlabel(f"Iterations")
+        plt.ylabel(f"Score")
+        plt.xlabel(f"Iteration")
         plt.legend(legend, loc='upper left')
 
         print(f"Plot Play Agents is ready")
