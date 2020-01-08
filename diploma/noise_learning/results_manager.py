@@ -103,7 +103,7 @@ class ResultsManager:
         self.__save_agent_results(agents_results, target_path, self.play_agent_filename)
 
     def __get_save_folder(self, execution_date: int, execution_number: int) -> str:
-        now = datetime.datetime.utcfromtimestamp(execution_date).strftime('%Y-%m-%d_%H:%M:%S')
+        now = datetime.datetime.utcfromtimestamp(execution_date).strftime('%Y-%m-%d_%H-%M-%S')
         target_dir = f"{now}_{self.settings.noise_learning_agent}_{self.settings.exchange_type}_{execution_number}"
         target_path = os.path.join(*self.results_path, target_dir)
         if not os.path.exists(target_path):
