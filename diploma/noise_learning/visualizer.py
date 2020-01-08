@@ -85,6 +85,13 @@ class Visualizer:
                 agent_metrics.exchange_attempts = agent_metrics.exchange_attempts + agent_result.exchange_attempts
                 agent_metrics.exchanges = agent_metrics.exchanges + agent_result.exchanges
                 print(f"Metrics set for result {i}, agent {j}. {(i * self.agents_number + j) + 1}/{total}")
+
+        for i in range(self.agents_number):
+            agent_metrics = agents_metrics[i]
+            agent_metrics.losses = agent_metrics.losses.get_reduced_metrics()
+            agent_metrics.scores = agent_metrics.scores.get_reduced_metrics()
+            agent_metrics.distances = agent_metrics.distances.get_reduced_metrics()
+            print(f"Metrics reduced using {len(agent_results)} results for agent {i}. {i + 1}/{self.agents_number}")
                 
     def show_train_metrics(self):
         self.__plot_by_noise()
