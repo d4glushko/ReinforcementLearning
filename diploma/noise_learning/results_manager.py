@@ -145,6 +145,8 @@ class ResultsManager:
                 continue
 
             settings_file_path = os.path.join(result_dir, self.settings_filename)
+            if not os.path.isfile(settings_file_path):
+                continue
             agent_settings = Settings.from_dict(self.__get_dict(settings_file_path))
             if not self.settings.is_same_settings(agent_settings):
                 continue
