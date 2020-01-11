@@ -128,8 +128,16 @@ class Visualizer:
             self.__plot_agent_metric(i, "losses")
             self.__plot_agent_metric(i, "distances")
 
+    def get_metrin_name_y_label(self, metric_name: str) -> str:
+        mapping = {
+            "scores": "Score",
+            "losses": "Loss",
+            "distances": "Distance"
+        }
+        return mapping[metric_name]
+
     def __plot_metrics_by_noise(self, metric_name: str):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(5,3.7))
         legend = []
 
         all_metrics = self.__get_all_metrics(metric_name)
@@ -138,18 +146,21 @@ class Visualizer:
             metrics = all_metrics.get_by_noise(noise)
             avgs = metrics.get_mov_avgs(self.metrics_number_of_elements, self.metrics_number_of_iterations)
             color = self.__get_color_by_noise(noise)
-            plt.plot(avgs.get_metric_property("iteration"), avgs.get_metric_property("value"), color=color)
+            plt.plot(avgs.get_metric_property("iteration"), avgs.get_metric_property("value"), color=color, alpha=0.7)
             legend.append(f"Noise = {noise:.2f}")
             
-        fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) per Noise")
-        plt.ylabel(f"Moving average over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
+        fig.suptitle(
+            f"Averaged {metric_name} for {self.results_number} run(s) per Noise. "
+            f"Moving average over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations"
+        )
+        plt.ylabel(f"{self.get_metrin_name_y_label(metric_name)}")
         plt.xlabel(f"Iteration")
-        plt.legend(legend, loc='upper left')
+        plt.legend(legend, loc='best')
 
         print(f"Plot Metric by Noise for metric {metric_name} is ready")
 
     def __plot_agent_metric(self, agent_number: int, metric_name: str):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(5,3.7))
         legend = []
         
         metrics: Metrics = getattr(self.agent_metrics[agent_number], metric_name)
@@ -165,15 +176,18 @@ class Visualizer:
             plt.plot(iterations, y, color=color)
             legend.append(f"Noise = {noise:.2f}")
             
-        fig.suptitle(f"Averaged {metric_name} for {self.results_number} run(s) for Agent {agent_number}")
-        plt.ylabel(f"Moving average over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations")
+        fig.suptitle(
+            f"Averaged {metric_name} for {self.results_number} run(s) for Agent {agent_number}. "
+            f"Moving average over the last {self.metrics_number_of_elements} elements every {self.metrics_number_of_iterations} iterations"
+        )
+        plt.ylabel(f"{self.get_metrin_name_y_label(metric_name)}")
         plt.xlabel(f"Iteration")
-        plt.legend(legend, loc='upper left')
+        plt.legend(legend, loc='best')
 
         print(f"Plot Agent Metric for agent {agent_number}, metric {metric_name} is ready. Total agents: {self.agents_number}")
 
     def __plot_agent_by_noise(self):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(5,3.7))
         legend = []
         metric_name = "scores"  # can be used any metric, because we don't need values here
 
@@ -181,18 +195,18 @@ class Visualizer:
             metrics: Metrics = getattr(self.agent_metrics[i], metric_name)
             metrics = metrics.get_reduced_metrics()
             color = self.colors[i]
-            plt.plot(metrics.get_metric_property("iteration"), metrics.get_metric_property("noise"), color=color)
+            plt.plot(metrics.get_metric_property("iteration"), metrics.get_metric_property("noise"), color=color, alpha=0.7)
             legend.append(f"Agent {i}")
             
         fig.suptitle(f"Agents paths for {self.results_number} run(s)")
         plt.ylabel(f"Noise")
         plt.xlabel(f"Iteration")
-        plt.legend(legend, loc='upper left')
+        plt.legend(legend, loc='best')
 
         print(f"Plot Agent by Noise is ready")
 
     def __plot_exchanges(self):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(5,3.7))
         x_labels = []
         y_pos = []
         values = []
@@ -217,18 +231,18 @@ class Visualizer:
         print(f"Plot Exchanges is ready")
 
     def __plot_play_agents(self):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(5,3.7))
         legend = []
 
         for idx, play_metrics in enumerate(self.agent_play_metrics):
             scores_metrics = play_metrics.scores.get_reduced_metrics()
             color = self.colors[idx]
-            plt.plot(scores_metrics.get_metric_property("iteration"), scores_metrics.get_metric_property("value"), color=color)
+            plt.plot(scores_metrics.get_metric_property("iteration"), scores_metrics.get_metric_property("value"), color=color, alpha=0.7)
             legend.append(f"Agent {idx}")
             
         fig.suptitle(f"Play Results. Averaged scores for {self.results_number} run(s) per Agent")
         plt.ylabel(f"Score")
         plt.xlabel(f"Iteration")
-        plt.legend(legend, loc='upper left')
+        plt.legend(legend, loc='best')
 
         print(f"Plot Play Agents is ready")
