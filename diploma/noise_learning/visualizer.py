@@ -1,6 +1,7 @@
 import typing
 import numpy as np
 import random
+import os
 import matplotlib
 import torch
 matplotlib.use("TKAgg")
@@ -17,15 +18,19 @@ class Visualizer:
     def __init__(
         self, exchange_type: ExchangeTypes, exchange_delta: float, exchange_items_reward_count: int, agents_number: int, 
         env_name: str, noise_learning_agent: NoiseLearningAgents, metrics_number_of_elements: int, metrics_number_of_iterations: int, 
-        detailed_agents_plots: bool, noise_env_step: float, executions_count: int, executions_from: int, execution_date: str
+        detailed_agents_plots: bool, noise_env_step: float, noise_dropout_step: float, early_stopping: bool,
+        num_steps_per_episode: int, executions_count: int, executions_from: int, execution_date: str
     ):
         self.agents_number: int = agents_number
         self.noise_learning_agent: NoiseLearningAgents = noise_learning_agent
         self.noise_env_step: float = noise_env_step
+        self.noise_dropout_step = noise_dropout_step
+        self.early_stopping = early_stopping
         self.env_name: str = env_name
         self.exchange_type: ExchangeTypes = exchange_type
         self.exchange_delta: float = exchange_delta
         self.exchange_items_reward_count: int = exchange_items_reward_count
+        self.num_steps_per_episode = num_steps_per_episode
 
         self.detailed_agents_plots: bool = detailed_agents_plots
         self.metrics_number_of_elements: int = metrics_number_of_elements
@@ -50,8 +55,9 @@ class Visualizer:
         agent_hyper_params = choose_agent(self.noise_learning_agent).agent_hyper_params.to_dict()
         self.results_manager: ResultsManager = ResultsManager(
             Settings(
-                self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.exchange_type.name, 
-                self.exchange_delta, self.exchange_items_reward_count, agent_hyper_params
+                self.agents_number, self.env_name, self.noise_learning_agent.name, self.noise_env_step, self.noise_dropout_step,
+                self.early_stopping, self.exchange_type.name,
+                self.exchange_delta, self.exchange_items_reward_count, self.num_steps_per_episode, agent_hyper_params
             )
         )
         self.agent_metrics: typing.List[AgentMetrics] = [
@@ -94,15 +100,18 @@ class Visualizer:
 
         self.__plot_agent_by_noise()
 
-        if self.exchange_type == ExchangeTypes.RANDOM or self.exchange_type == ExchangeTypes.SMART:
-            self.__plot_exchanges()
+        # if self.exchange_type == ExchangeTypes.RANDOM or self.exchange_type == ExchangeTypes.SMART:
+        #     self.__plot_exchanges()
             
         plt.show(block=False)
+        self.__save_plots()
+
 
     def show_play_metrics(self):
         self.__plot_play_agents()
-            
         plt.show(block=False)
+        self.__save_plots()
+
 
     def __get_all_metrics(self, metric_name: str) -> Metrics:
         all_metrics: Metrics = Metrics()
@@ -146,6 +155,7 @@ class Visualizer:
             metrics = all_metrics.get_by_noise(noise)
             avgs = metrics.get_mov_avgs(self.metrics_number_of_elements, self.metrics_number_of_iterations)
             color = self.__get_color_by_noise(noise)
+            # print(avgs.get_metric_property("iteration"))
             plt.plot(avgs.get_metric_property("iteration"), avgs.get_metric_property("value"), color=color, alpha=0.7)
             legend.append(f"Noise = {noise:.2f}")
             
@@ -233,16 +243,35 @@ class Visualizer:
     def __plot_play_agents(self):
         fig = plt.figure(figsize=(5,3.7))
         legend = []
+        f_path = os.path.join('diploma', 'results', self.execution_date)
+        if not os.path.isdir(f_path):
+            os.makedirs(f_path)
+        play_scores_f = open(f_path + '/play_avg_scores.csv', 'w')
+        play_scores_f.write('Agent, Avg over runs and play eps, Std,\n')
 
         for idx, play_metrics in enumerate(self.agent_play_metrics):
             scores_metrics = play_metrics.scores.get_reduced_metrics()
             color = self.colors[idx]
             plt.plot(scores_metrics.get_metric_property("iteration"), scores_metrics.get_metric_property("value"), color=color, alpha=0.7)
             legend.append(f"Agent {idx}")
-            
+            play_scores_f.write(','.join([str(idx), str(np.mean(scores_metrics.get_metric_property("value"))),
+                                          str(np.std(scores_metrics.get_metric_property("value")))]))
+            play_scores_f.write('\n')
+
+
+        play_scores_f.close()
         fig.suptitle(f"Play Results. Averaged scores for {self.results_number} run(s) per Agent")
         plt.ylabel(f"Score")
         plt.xlabel(f"Iteration")
         plt.legend(legend, loc='best')
 
         print(f"Plot Play Agents is ready")
+
+    def __save_plots(self):
+        path_to_save = os.path.join('diploma', 'results', self.execution_date)
+        if not os.path.isdir(path_to_save):
+            os.makedirs(path_to_save)
+        for i in plt.get_fignums():
+            plt.figure(i)
+            plt.savefig(os.path.join(path_to_save, f'figure_{i}.png'))
+

@@ -12,25 +12,34 @@ from .utils import ExchangeTypes
 
 class Settings(DictSerializable):
     def __init__(
-        self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, exchange_type: str, 
-        exchange_delta: float, exchange_items_reward_count: int, agent_hyper_params: dict
+        self, agents_number: int, env_name: str, noise_learning_agent: str, noise_env_step: float, noise_dropout_step: float, early_stopping: bool, exchange_type: str,
+        exchange_delta: float, exchange_items_reward_count: int,  num_steps_per_episode: int, agent_hyper_params: dict
     ):
         self.agents_number: int = agents_number
         self.env_name: str = env_name
         self.noise_learning_agent: str = noise_learning_agent
         self.noise_env_step: float = noise_env_step
+        self.noise_dropout_step = noise_dropout_step
+        self.early_stopping = early_stopping
         self.exchange_type: str = exchange_type
         self.exchange_delta: float = exchange_delta
         self.exchange_items_reward_count: int = exchange_items_reward_count
+        self.num_steps_per_episode = num_steps_per_episode
         self.agent_hyper_params: dict = agent_hyper_params
+
 
     def is_same_settings(self, settings: 'Settings'):
         result = self.agents_number == settings.agents_number and \
                 self.env_name == settings.env_name and \
                 self.noise_learning_agent == settings.noise_learning_agent and \
                 self.noise_env_step == settings.noise_env_step and \
+                self.noise_dropout_step == settings.noise_dropout_step and \
+                self.early_stopping == settings.early_stopping and \
                 self.exchange_type == settings.exchange_type and \
-                self.agent_hyper_params == settings.agent_hyper_params
+                self.num_steps_per_episode == settings.num_steps_per_episode
+
+        #and \
+                # self.agent_hyper_params == settings.agent_hyper_params
 
         if self.exchange_type == ExchangeTypes.SMART.name:
             result = result and \
@@ -94,9 +103,9 @@ class ResultsManager:
         self.settings: Settings = settings
 
     def save_train_results(self, agents_results: typing.List[AgentResults], execution_date: int, execution_number: int):
-        target_path = self.__get_save_folder(execution_date, execution_number)
-        self.__save_agent_results(agents_results, target_path, self.agent_filename)
-        self.__save_settings(target_path)
+        self.target_path = self.__get_save_folder(execution_date, execution_number)
+        self.__save_agent_results(agents_results, self.target_path, self.agent_filename)
+        self.__save_settings(self.target_path)
 
     def save_play_results(self, agents_results: typing.List[AgentResults], execution_date: int, execution_number: int):
         target_path = self.__get_save_folder(execution_date, execution_number)

@@ -9,8 +9,8 @@ class AgentHyperParams(DictSerializable):
 class BaseAgent():
     agent_hyper_params: AgentHyperParams = None
 
-    def __init__(self, observation_space: int, action_space: int, device, debug: bool):
-        self.observation_space: int = observation_space
+    def __init__(self, observation_space: tuple, action_space: int, device, debug: bool):
+        self.observation_space: tuple = observation_space
         self.action_space: int = action_space
         self.device = device
         self._debug: bool = debug
@@ -38,16 +38,22 @@ class BaseAgent():
             }
             self._debug_log(f"Remember Started. To remember: {to_remember}")
     
-    def reflect(self, done) -> typing.Tuple[typing.Optional[float], typing.Optional[float]]:
+    def reflect(self, done, step) -> typing.Tuple[typing.Optional[float], typing.Optional[float]]:
         if self._debug:
             self._debug_log(f"Reflect Started.")
         return None, None
+
+    def save_weights(self, path):
+        if self._debug:
+            self._debug_log(f"Saving agent's weights to {path}")
 
     def _debug_log(self, message):
         print(f"DEBUG. {self.__class__.__name__}. {message}")
 
     def _info_log(self, message):
         print(f"INFO. {self.__class__.__name__}. {message}")
+
+
 
     @staticmethod
     def calc_dist(t1: torch.Tensor, t2: torch.Tensor) -> float:

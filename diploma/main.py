@@ -11,6 +11,7 @@ def main(arguments):
     env_name = arguments.env_name
     agent = NoiseLearningAgents[arguments.agent]
     noise_env_step = arguments.noise_env_step
+    noise_dropout_step = arguments.noise_dropout_step
     epsilon_wrt_noise = arguments.epsilon_wrt_noise
 
     exchange_type = ExchangeTypes[arguments.exchange_type]
@@ -19,10 +20,12 @@ def main(arguments):
 
     warm_up_steps = arguments.warm_up_steps
     exchange_steps = arguments.exchange_steps
+    early_stopping = arguments.early_stopping
 
     debug = arguments.debug
     use_cuda = arguments.use_cuda
     training_episodes = arguments.training_episodes
+    num_steps_per_episode = arguments.num_steps_per_episode
     play_episodes = arguments.play_episodes
 
     date = arguments.date
@@ -31,9 +34,9 @@ def main(arguments):
 
     noise_learning = NoiseLearning(
         exchange_type=exchange_type, exchange_delta=exchange_delta, exchange_items_reward_count=exchange_items_reward_count, 
-        training_episodes=training_episodes, play_episodes=play_episodes, agents_number=agents_number, env_name=env_name, 
-        noise_learning_agent=agent, debug=debug, noise_env_step=noise_env_step, epsilon_wrt_noise=epsilon_wrt_noise, 
-        use_cuda=use_cuda, warm_up_steps=warm_up_steps, exchange_steps=exchange_steps,
+        training_episodes=training_episodes, num_steps_per_episode=num_steps_per_episode, play_episodes=play_episodes, agents_number=agents_number, env_name=env_name,
+        noise_learning_agent=agent, debug=debug, noise_env_step=noise_env_step, noise_dropout_step=noise_dropout_step, epsilon_wrt_noise=epsilon_wrt_noise,
+        use_cuda=use_cuda, warm_up_steps=warm_up_steps, exchange_steps=exchange_steps, early_stopping=early_stopping,
         date=date, current_execution=current_execution, total_executions=total_executions
     )
 
@@ -61,6 +64,8 @@ if __name__ == '__main__':
     parser.add_argument('--env_name', type=str, default='CartPole-v1')
     parser.add_argument('--agent', type=str, default='DQN')
     parser.add_argument('--noise_env_step', type=float, default=0.1)
+    parser.add_argument('--noise_dropout_step', type=float, default=0.1)
+
     parser.add_argument('--epsilon_wrt_noise', type=str2bool, default=False)
 
     parser.add_argument('--exchange_type', type=str, default='NO')
@@ -69,10 +74,12 @@ if __name__ == '__main__':
 
     parser.add_argument('--warm_up_steps', type=int, default=30)
     parser.add_argument('--exchange_steps', type=int, default=5)
+    parser.add_argument('--early_stopping', type=str2bool, default=False)
 
     parser.add_argument('--debug', type=str2bool, default=False)
     parser.add_argument('--use_cuda', type=str2bool, default=True)
     parser.add_argument('--training_episodes', type=int, default=5000)
+    parser.add_argument('--num_steps_per_episode', type=int, default=0)
     parser.add_argument('--play_episodes', type=int, default=500)
     parser.add_argument('--ignore_play', type=str2bool, default=False)
 
